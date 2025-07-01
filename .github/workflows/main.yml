@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧾 Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # Change if needed
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Run code formatter
+        run: make format
+
+      - name: Run linter
+        run: make lint
+
+      - name: Run tests
+        run: make test
