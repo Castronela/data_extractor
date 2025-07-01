@@ -2,3 +2,6 @@ pylint
 pytest
 black
 ipython
+requests
+numpy
+pandas
