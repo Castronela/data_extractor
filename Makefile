@@ -12,4 +12,3 @@ format:
 
 lint:
 	pylint --disable=R,C --ignore=.myenv .
-
