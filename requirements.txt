@@ -6,3 +6,4 @@ requests
 numpy
 pandas
 logging
+python-json-logger

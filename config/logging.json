@@ -4,6 +4,11 @@
     "formatters": {
         "format_1": {
             "format": "%(asctime)s - %(name)s - %(levelname)-8s - %(message)s"
+		},
+		"json": {
+			"()": "pythonjsonlogger.json.JsonFormatter",
+			"format": "%(asctime)s %(levelname)s %(filename)s %(lineno)d %(message)s",
+            "rename_fields": {"asctime": "time", "levelname": "level", "lineno": "line_number"}
 		}
 	},
     "handlers": {
@@ -21,6 +26,14 @@
             "maxBytes": 5242880,
 			"backupCount": 3
 		},
+        "json_log": {
+            "class": "logging.handlers.RotatingFileHandler",
+			"level": "DEBUG",
+            "formatter": "json",
+            "filename": "logs/log.jsonl",
+            "maxBytes": 5242880,
+			"backupCount": 3
+		},
         "file_test": {
             "class": "logging.handlers.RotatingFileHandler",
 			"level": "DEBUG",
@@ -33,7 +46,7 @@
     "loggers": {
         "logger": {
             "level": "DEBUG",
-            "handlers": ["stdout", "file_log"]
+            "handlers": ["stdout", "file_log", "json_log"]
         },
 		"test_logger": {
 			"level": "DEBUG",
