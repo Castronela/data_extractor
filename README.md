@@ -63,7 +63,8 @@ This will:
 - Install dependencies
 - Format code using black
 - Lint using pylint
-- Run tests with pytest
+- Run tests with pytest  
+
 Tests use unittest.mock to patch external API requests.
 
 
