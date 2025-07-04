@@ -5,5 +5,5 @@ ipython
 requests
 numpy
 pandas
-logging
 python-json-logger
+apache-airflow
