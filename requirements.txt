@@ -6,4 +6,3 @@ requests
 numpy
 pandas
 python-json-logger
-apache-airflow
