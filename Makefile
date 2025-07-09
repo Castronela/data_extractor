@@ -14,7 +14,7 @@ format:
 	@black . --extend-exclude=".myenv/"
 
 lint:
-	@pylint --disable=R,C,E0401,E0611,E1123 --ignore=.myenv .
+	@pylint --disable=R,C,E0401,E0611,E1123,W0718 --ignore=.myenv .
 
 docker:
 	@cd docker \

@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 from src.extract_weather import fetch_weather_data, transform_weather_data, save_to_csv
 
 # Logger Setup
-t_logger = logging.getLogger("test_logger")
+t_logger = logging.getLogger(__name__)
 
 
 def setup_logging():

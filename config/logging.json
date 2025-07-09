@@ -3,7 +3,7 @@
     "disable_existing_loggers": false,
     "formatters": {
         "format_1": {
-            "format": "%(asctime)s - %(name)s - %(levelname)-8s - %(message)s"
+            "format": "%(asctime)s - %(name)-20s - %(levelname)-8s - %(message)s"
 		},
 		"json": {
 			"()": "pythonjsonlogger.json.JsonFormatter",
@@ -48,7 +48,11 @@
             "level": "DEBUG",
             "handlers": ["stdout", "file_log", "json_log"]
         },
-		"test_logger": {
+		"test_extract_weather": {
+			"level": "DEBUG",
+			"handlers": ["file_test"]
+		},
+		"test_blob_runner": {
 			"level": "DEBUG",
 			"handlers": ["file_test"]
 		}
