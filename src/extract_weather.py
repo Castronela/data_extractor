@@ -66,7 +66,7 @@ def save_to_csv(df: pd.DataFrame, output_dir="data") -> str:
 
 
 @setup_logging
-def main():
+def extract_data():
     logger.info("--- Weather data extraction started ---")
 
     api_url = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&hourly=temperature_2m"
@@ -78,4 +78,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    extract_data()

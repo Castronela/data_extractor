@@ -15,11 +15,15 @@ format:
 	@black . --extend-exclude=".myenv/"
 
 lint:
-	@pylint --disable=R,C,E0401,E0611,E1123,W0718 --ignore=.myenv .
+	@pylint --disable=R,C,E0401,E0611,E1123,W0718,W0104 --ignore=.myenv .
 
-docker:
+docker-up:
 	@cd docker \
-	&& echo -n "AIRFLOW_UID=$$(id -u)" > .env \
-	&& docker compose up -d --build
+		&& echo -n "AIRFLOW_UID=$$(id -u)" > .env \
+		&& docker compose up -d --build
+
+docker-down:
+	@cd docker \
+		&& docker compose down
 
 .PHONY: all install test format lint docker

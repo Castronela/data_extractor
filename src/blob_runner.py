@@ -10,7 +10,7 @@ logger = logging.getLogger("blob_runner")
 
 
 def setup_logging(func):
-    def wrapper(*args, **kwargs):
+    def wrapper():
         config_file = "config/logging.json"
         try:
             with open(config_file, encoding="utf-8") as file:
@@ -19,7 +19,7 @@ def setup_logging(func):
         except Exception as e:
             logger.exception("Logging setup failed: %s", e)
             raise
-        return func(*args, **kwargs)
+        return func()
 
     return wrapper
 
@@ -100,7 +100,7 @@ def upload_files_to_container(container_client: ContainerClient, file_paths: lis
 
 
 @setup_logging
-def main():
+def upload_blob():
     logger.info("--- Blob runner started ---")
 
     container_id = "weather-data"
@@ -113,4 +113,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    upload_blob()

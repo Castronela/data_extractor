@@ -6,5 +6,7 @@ services:
     image: airflow_sim
     ports:
       - "8080:8080"
+    volumes:
+      - ../.env:/opt/airflow/.env
     environment:
       - AIRFLOW_UID=${AIRFLOW_UID}
