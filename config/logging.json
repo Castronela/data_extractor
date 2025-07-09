@@ -44,7 +44,15 @@
 		}
 	},
     "loggers": {
-        "logger": {
+        "test_main": {
+            "level": "DEBUG",
+            "handlers": ["file_test"]
+        },
+        "extract_weather": {
+            "level": "DEBUG",
+            "handlers": ["stdout", "file_log", "json_log"]
+        },
+        "blob_runner": {
             "level": "DEBUG",
             "handlers": ["stdout", "file_log", "json_log"]
         },

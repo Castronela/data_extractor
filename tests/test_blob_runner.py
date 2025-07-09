@@ -22,7 +22,7 @@ def setup_logging():
             config = json.load(file)
         logging.config.dictConfig(config)
     except Exception as e:
-        test_logger.exception("Logging setup failed: %s", e)
+        logging.exception("Logging setup failed: %s", e)
         raise
 
 
@@ -50,7 +50,7 @@ class TestGetConnectionStr:
 
     # Test if function handles missing .env file, by raising FileNotFoundError
     def test_missing_env_file(self, tmp_path):
-        description = f"Test for {self.target_function}: handling missing .env"
+        description = f"{self.target_function:<30}: Test for handling missing .env"
 
         # Backup and then remove .env file from cwd
         env_cwd_path = Path.cwd() / ".env"
@@ -68,7 +68,7 @@ class TestGetConnectionStr:
 
     # Test if function handles missing AZURE_STORAGE_CONNECTION_STRING key, by raising KeyError
     def test_missing_key(self, tmp_path):
-        description = f"Test for {self.target_function}: handling missing key AZURE_STORAGE_CONNECTION_STRING"
+        description = f"{self.target_function:<30}: Test for handling missing key AZURE_STORAGE_CONNECTION_STRING"
 
         # Backup and then truncate .env file
         env_cwd_path = Path.cwd() / ".env"
@@ -87,7 +87,7 @@ class TestGetConnectionStr:
 
     # Test if function handles missing value (connection string), by raising ValueError
     def test_missing_value(self, tmp_path):
-        description = f"Test for {self.target_function}: handling missing value (connection string)"
+        description = f"{self.target_function:<30}: Test for handling missing value (connection string)"
 
         # Backup and then overwrite .env file with key only
         env_cwd_path = Path.cwd() / ".env"
@@ -112,7 +112,7 @@ class TestGetContainerClient:
     # Test if function handles valid connection string
     @patch("src.blob_runner.BlobServiceClient")
     def test_valid_args(self, mock_BlobServiceClient):
-        description = f"Test for {self.target_function}: handling valid arguments"
+        description = f"{self.target_function:<30}: Test for handling valid arguments"
         mock_blob_service_client = Mock()
         mock_container_client = Mock()
         mock_BlobServiceClient.from_connection_string.return_value = (
@@ -135,7 +135,7 @@ class TestGetContainerClient:
     # Test if function handles invalid connection string
     @patch("src.blob_runner.BlobServiceClient")
     def test_invalid_args(self, mock_BlobServiceClient):
-        description = f"Test for {self.target_function}: handling invalid arguments"
+        description = f"{self.target_function:<30}: Test for handling invalid arguments"
         mock_blob_service_client = Mock()
         mock_container_client = Mock()
         mock_BlobServiceClient.from_connection_string.return_value = (
@@ -161,7 +161,7 @@ class TestGetContainerClient:
         self, mock_BlobServiceClient, connection_str, container_id
     ):
         empty_arg = "connection string" if not connection_str else "container id"
-        description = f"Test for {self.target_function}: handling empty {empty_arg}"
+        description = f"{self.target_function:<30}: Test for handling empty {empty_arg}"
 
         mock_blob_service_client = Mock()
         mock_container_client = Mock()
@@ -182,7 +182,7 @@ class TestGetFilesPathsToUpload:
 
     # Test if function returns only .csv files when option only_csv is True
     def test_only_csv(self, tmp_path):
-        description = f"Test for {self.target_function}: returning only .csv files when option only_csv is True"
+        description = f"{self.target_function:<30}: Test for returning only .csv files when option only_csv is True"
 
         files = ("good.csv", "bad.txt", "bad.csvv")
         file_paths = [str(tmp_path / f) for f in files]
@@ -202,7 +202,7 @@ class TestGetFilesPathsToUpload:
 
     # Test if function returns all files when option only_csv is False
     def test_all_files(self, tmp_path):
-        description = f"Test for {self.target_function}: returning all files when option only_csv is False"
+        description = f"{self.target_function:<30}: Test for returning all files when option only_csv is False"
 
         files = ("good.csv", "good.txt", "good.csvv")
         file_paths = [str(tmp_path / f) for f in files]
@@ -223,7 +223,9 @@ class TestGetFilesPathsToUpload:
 
     # Test if function handles invalid source path
     def test_invalid_source_path(self):
-        description = f"Test for {self.target_function}: handling invalid source path"
+        description = (
+            f"{self.target_function:<30}: Test for handling invalid source path"
+        )
 
         bad_path = "/dev/null/subdir"
         check_for_raised_exception(
@@ -238,7 +240,7 @@ class TestUploadFilesToContainer:
     # Test if function handles invalid file path
     def test_invalid_file_path(self):
         description = (
-            f"Test for {self.target_function}: handling invalid file path to upload"
+            f"{self.target_function:<30}: Test for handling invalid file path to upload"
         )
 
         bad_file_path = ["/dev/null/bad.csv"]
@@ -256,7 +258,7 @@ class TestUploadFilesToContainer:
 
     # Test if function handles upload failure
     def test_upload_failure(self, tmp_path):
-        description = f"Test for {self.target_function}: handling upload failure"
+        description = f"{self.target_function:<30}: Test for handling upload failure"
 
         test_file = tmp_path / "test.csv"
         open(test_file, "a", encoding="utf-8").close()

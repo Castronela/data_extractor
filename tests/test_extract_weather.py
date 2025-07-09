@@ -1,6 +1,5 @@
-import os
+from pathlib import Path
 import pandas as pd
-import logging.config
 import logging
 import json
 from unittest.mock import patch, MagicMock
@@ -15,10 +14,10 @@ def setup_logging():
     try:
         with open(config_file, encoding="utf-8") as file:
             config = json.load(file)
-    except FileNotFoundError:
-        t_logger.exception("Logging config file '%s' does not exist", config_file)
+        logging.config.dictConfig(config)
+    except Exception as e:
+        logging.exception("Logging setup failed: %s", e)
         raise
-    logging.config.dictConfig(config)
 
 
 setup_logging()
@@ -36,40 +35,67 @@ fake_api_response = {
 }
 
 
-@patch("src.extract_weather.requests.get")
-def test_fetch_weather_data(mock_get):
-    t_logger.info("Testing api call")
-    mock_resp = MagicMock()
-    mock_resp.json.return_value = fake_api_response
-    mock_resp.raise_for_status = lambda: None
-    mock_get.return_value = mock_resp
+class TestFetchWeatherData:
 
-    result = fetch_weather_data("fake_url")
-    assert result == fake_api_response
+    target_function = "fetch_weather_data"
+
+    @patch("src.extract_weather.requests.get")
+    def test_fetch_weather_data_valid_return_value(self, mock_get):
+        description = f"{self.target_function:<30}: Test for returning valid value"
+
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = fake_api_response
+        mock_resp.raise_for_status = lambda: None
+        mock_get.return_value = mock_resp
+        try:
+            result = fetch_weather_data("fake_url")
+            assert result == fake_api_response
+        except AssertionError:
+            t_logger.info("FAILED: %s", description)
+            raise
+        else:
+            t_logger.info("PASSED: %s", description)
 
 
-def test_transform_weather_data():
-    t_logger.info("Testing data manipulation")
-    df = transform_weather_data(fake_api_response)
-    assert "latitude" in df.columns
-    assert "longitude" in df.columns
-    assert "timezone" in df.columns
-    assert df.shape[0] == 2
+class TestTransformWeatherData:
+
+    target_function = "transform_weather_data"
+
+    def test_transform_weather_data(self):
+        description = f"{self.target_function:<30}: Test for returning valid values"
+        try:
+            df = transform_weather_data(fake_api_response)
+            assert "latitude" in df.columns
+            assert "longitude" in df.columns
+            assert "timezone" in df.columns
+            assert df.shape[0] == 2
+        except AssertionError:
+            t_logger.info("FAILED: %s", description)
+            raise
+        else:
+            t_logger.info("PASSED: %s", description)
 
 
-def test_save_to_csv(tmp_path):
-    t_logger.info("Testing saving data to csv file")
-    df = pd.DataFrame(
-        {
-            "time": ["2025-07-01T00:00", "2025-07-01T01:00"],
-            "temperature_2m": [17.8, 17.3],
-        }
-    )
+class TestSaveToCsv:
 
-    output_dir = tmp_path
+    target_function = "save_to_csv"
 
-    filename = save_to_csv(df, output_dir=str(output_dir))
-    assert os.path.isfile(filename)
-
-    df_loaded = pd.read_csv(filename)
-    pd.testing.assert_frame_equal(df, df_loaded)
+    def test_save_to_csv(self, tmp_path):
+        description = (
+            f"{self.target_function:<30}: Test for file saving and correct return value"
+        )
+        df = pd.DataFrame(
+            {
+                "time": ["2025-07-01T00:00", "2025-07-01T01:00"],
+                "temperature_2m": [17.8, 17.3],
+            }
+        )
+        try:
+            filename = save_to_csv(df, output_dir=str(tmp_path))
+            assert Path(filename).exists()
+            df_loaded = pd.read_csv(filename)
+            pd.testing.assert_frame_equal(df, df_loaded)
+        except AssertionError:
+            t_logger.info("FAILED: %s", description)
+        else:
+            t_logger.info("PASSED: %s", description)

@@ -1,10 +1,12 @@
 import logging.config
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from dotenv import load_dotenv, dotenv_values
-import logging, json
+import logging
+import json
+import azure
 from pathlib import Path
 
-logger = logging.getLogger("logger")
+logger = logging.getLogger("blob_runner")
 
 
 def setup_logging(func):
@@ -85,8 +87,10 @@ def upload_files_to_container(container_client: ContainerClient, file_paths: lis
             file_name = Path(file_path).name
             with open(file_path, "rb") as data:
                 blob_client = container_client.upload_blob(
-                    name=file_name, data=data, overwrite=True
+                    name=file_name, data=data, overwrite=False
                 )
+        except azure.core.exceptions.ResourceExistsError:
+            logger.info("Blob already exists: %s", file_name)
         except Exception as e:
             logger.exception("Failed to upload '%s': %s", file_path, e)
             raise

@@ -5,7 +5,8 @@ install:
 		&& pip install -r requirements.txt
 
 run:
-	@python src/extract_weather.py
+	@python src/extract_weather.py \
+		&& python src/blob_runner.py
 
 test:
 	@python -m pytest --rootdir=tests tests/*.py

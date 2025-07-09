@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import datetime
 
 # Logger Setup
-logger = logging.getLogger("logger")
+logger = logging.getLogger("extract_weather")
 
 
 def setup_logging(func):
@@ -25,21 +25,18 @@ def setup_logging(func):
 
 
 def fetch_weather_data(api_url: str) -> dict:
-    logger.info("Fetching weather data")
-
     try:
         response = requests.get(api_url, timeout=30)
         response.raise_for_status()
-    except requests.exceptions.RequestException:
-        logger.exception("Failed to fetch weather data")
+    except requests.exceptions.RequestException as e:
+        logger.exception("Failed to fetch weather data: %s", e)
         raise
-
-    logger.info("Weather data fetched successfully")
+    else:
+        logger.info("Weather data fetched")
     return response.json()
 
 
 def transform_weather_data(data: dict) -> pd.DataFrame:
-    logger.info("Transforming weather data")
 
     hourly = data["hourly"]
     hourly_df = pd.DataFrame(hourly)
@@ -50,30 +47,34 @@ def transform_weather_data(data: dict) -> pd.DataFrame:
 
     for key, value in metadata.items():
         hourly_df[key] = value
+    logger.info("Weather data transformed")
     return hourly_df
 
 
 def save_to_csv(df: pd.DataFrame, output_dir="data") -> str:
     today_str = datetime.today().strftime("%Y%m%d")
     filename = f"{output_dir}/weather_{today_str}.csv"
-    logger.debug("Saving weather data to %s", filename)
     try:
+        logger.debug("Saving weather data to %s", filename)
         df.to_csv(filename, index=False)
     except Exception:
         logger.exception("Failed to save to %s", filename)
         raise
+    else:
+        logger.info("Weather data saved to %s", filename)
     return filename
 
 
 @setup_logging
 def main():
-    logger.info("Weather data extraction started")
+    logger.info("--- Weather data extraction started ---")
+
     api_url = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&hourly=temperature_2m"
     weather_json = fetch_weather_data(api_url)
     df = transform_weather_data(weather_json)
-    filename = save_to_csv(df)
-    logger.info("Saved to %s", filename)
-    logger.info("Weather data extraction ended\n")
+    save_to_csv(df)
+
+    logger.info("--- Weather data extraction ended ---")
 
 
 if __name__ == "__main__":
