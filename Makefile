@@ -2,11 +2,14 @@ all: install format lint test
 
 install:
 	@pip install -U pip \
-		&& pip install -r requirements.txt
+		&& pip install -r requirements.txt \
+		&& if [ ! -s .env ]; then \
+		echo -e "AZURE_STORAGE_CONNECTION_STRING=\nAZURE_BLOB_CONTAINER_ID=" > .env; \
+		fi
 
 run:
 	@python src/extract_weather.py \
-		&& python src/blob_runner.py
+		&& python src/blob_runner.py 
 
 test:
 	@python -m pytest --rootdir=tests tests/*.py

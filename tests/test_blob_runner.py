@@ -1,5 +1,5 @@
 from src.blob_runner import (
-    get_connection_str,
+    get_dotenv_auth_data,
     get_container_client,
     get_files_paths_to_upload,
     upload_files_to_container,
@@ -44,9 +44,9 @@ def check_for_raised_exception(
         assert False, f"Expected {exception}"
 
 
-class TestGetConnectionStr:
+class TestGetDotenvAuthData:
 
-    target_function = "get_connection_str"
+    target_function = "get_dotenv_auth_data"
 
     # Test if function handles missing .env file, by raising FileNotFoundError
     def test_missing_env_file(self, tmp_path):
@@ -60,15 +60,15 @@ class TestGetConnectionStr:
             os.remove(env_cwd_path)
 
         # Test for exception raised
-        check_for_raised_exception(FileNotFoundError, description, get_connection_str)
+        check_for_raised_exception(FileNotFoundError, description, get_dotenv_auth_data)
 
         # Restore original .env file
         if env_tmp_path.is_file():
             shutil.copy(env_tmp_path, env_cwd_path)
 
-    # Test if function handles missing AZURE_STORAGE_CONNECTION_STRING key, by raising KeyError
+    # Test if function handles missing keys, by raising KeyError
     def test_missing_key(self, tmp_path):
-        description = f"{self.target_function:<30}: Test for handling missing key AZURE_STORAGE_CONNECTION_STRING"
+        description = f"{self.target_function:<30}: Test for handling missing keys"
 
         # Backup and then truncate .env file
         env_cwd_path = Path.cwd() / ".env"
@@ -79,15 +79,24 @@ class TestGetConnectionStr:
             file.write("")
 
         # Test for exception raised
-        check_for_raised_exception(KeyError, description, get_connection_str)
+        check_for_raised_exception(KeyError, description, get_dotenv_auth_data)
 
         # Restore original .env file
         if env_tmp_path.is_file():
             shutil.copy(env_tmp_path, env_cwd_path)
 
-    # Test if function handles missing value (connection string), by raising ValueError
-    def test_missing_value(self, tmp_path):
-        description = f"{self.target_function:<30}: Test for handling missing value (connection string)"
+    # Test if function handles missing auth value, by raising ValueError
+    @pytest.mark.parametrize(
+        "dotenv_content",
+        [
+            "AZURE_STORAGE_CONNECTION_STRING=connection_str\nAZURE_BLOB_CONTAINER_ID=",
+            "AZURE_STORAGE_CONNECTION_STRING=\nAZURE_BLOB_CONTAINER_ID=container_id",
+        ],
+    )
+    def test_missing_value(self, tmp_path, dotenv_content):
+        description = (
+            f"{self.target_function:<30}: Test for handling missing auth value"
+        )
 
         # Backup and then overwrite .env file with key only
         env_cwd_path = Path.cwd() / ".env"
@@ -95,10 +104,10 @@ class TestGetConnectionStr:
         if env_cwd_path.is_file():
             shutil.copy(env_cwd_path, env_tmp_path)
         with open(env_cwd_path, "w", encoding="utf-8") as file:
-            file.write("AZURE_STORAGE_CONNECTION_STRING=")
+            file.write(dotenv_content)
 
         # Test for exception raised
-        check_for_raised_exception(ValueError, description, get_connection_str)
+        check_for_raised_exception(ValueError, description, get_dotenv_auth_data)
 
         # Restore original .env file
         if env_tmp_path.is_file():
@@ -121,10 +130,12 @@ class TestGetContainerClient:
         mock_blob_service_client.get_container_client.return_value = (
             mock_container_client
         )
+        auth_data = {
+            "connection_str": "good_connection_string",
+            "container_id": "good_container_id",
+        }
         try:
-            connection_str = "good_connection_string"
-            container_id = "good_container_id"
-            result = get_container_client(connection_str, container_id)
+            result = get_container_client(auth_data)
             assert result == mock_container_client
         except Exception:
             test_logger.info("FAILED: %s", description)
@@ -145,14 +156,16 @@ class TestGetContainerClient:
             mock_container_client
         )
         mock_blob_service_client.get_container_client.side_effect = Exception
-        connection_str = "bad_connection_string"
-        container_id = "bad_container_id"
+        auth_data = {
+            "connection_str": "good_connection_string",
+            "container_id": "good_container_id",
+        }
 
         check_for_raised_exception(
-            Exception, description, get_container_client, connection_str, container_id
+            Exception, description, get_container_client, auth_data
         )
 
-    # Test if function handles empty connection string
+    # Test if function handles empty connection string / container id
     @pytest.mark.parametrize(
         "connection_str, container_id", [("", "container_id"), ("connection_str", "")]
     )
@@ -171,8 +184,9 @@ class TestGetContainerClient:
         mock_blob_service_client.get_container_client.return_value = (
             mock_container_client
         )
+        auth_data = {"connection_str": connection_str, "container_id": container_id}
         check_for_raised_exception(
-            ValueError, description, get_container_client, connection_str, container_id
+            ValueError, description, get_container_client, auth_data
         )
 
 

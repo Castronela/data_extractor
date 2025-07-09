@@ -24,7 +24,7 @@ def test_session_header():
     logger.info("TEST SESSION STARTED: %s")
     logger.info("%s", separator)
 
-    yield 
+    yield
 
     logger.info("%s", separator)
     logger.info("TEST SESSION ENDED: %s")

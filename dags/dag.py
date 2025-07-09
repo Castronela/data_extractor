@@ -18,18 +18,14 @@ with DAG(
     catchup=False,
     is_paused_upon_creation=False,
     tags=["weather", "azure", "etl"],
-    default_args=default_args
+    default_args=default_args,
 ) as dag:
 
     task_extract_weather = PythonOperator(
-        dag=dag,
-        task_id="run_extract_weather",
-        python_callable=extract_data
+        dag=dag, task_id="run_extract_weather", python_callable=extract_data
     )
     task_blob_runner = PythonOperator(
-        dag=dag,
-        task_id="run_blob_runner",
-        python_callable=upload_blob
+        dag=dag, task_id="run_blob_runner", python_callable=upload_blob
     )
 
 task_extract_weather >> task_blob_runner

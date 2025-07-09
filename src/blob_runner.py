@@ -24,15 +24,20 @@ def setup_logging(func):
     return wrapper
 
 
-def get_connection_str() -> str:
+def get_dotenv_auth_data() -> dict:
     try:
         if not Path(".env").exists():
             raise FileNotFoundError(".env file not found")
         load_dotenv()
-        auth = dotenv_values()
-        connection_str = auth["AZURE_STORAGE_CONNECTION_STRING"]
-        if not connection_str:
+        dotenv = dotenv_values()
+        auth_data = {
+            "connection_str": dotenv["AZURE_STORAGE_CONNECTION_STRING"],
+            "container_id": dotenv["AZURE_BLOB_CONTAINER_ID"],
+        }
+        if not auth_data["connection_str"]:
             raise ValueError("connection string empty")
+        if not auth_data["container_id"]:
+            raise ValueError("container id empty")
     except (FileNotFoundError, ValueError, KeyError) as e:
         logger.exception("Failed to extract connection string from .env: %s", e)
         raise
@@ -41,12 +46,14 @@ def get_connection_str() -> str:
         raise
     else:
         logger.info("Connection string loaded")
-    return connection_str
+    return auth_data
 
 
-def get_container_client(connection_string: str, container_id) -> ContainerClient:
-    logger.info("Creating blob container object: %s", container_id)
+def get_container_client(auth_data: dict) -> ContainerClient:
+    connection_string = auth_data["connection_str"]
+    container_id = auth_data["container_id"]
     try:
+        logger.info("Creating blob container object: %s", container_id)
         if not container_id:
             raise ValueError("container_id is empty")
         if not connection_string:
@@ -103,9 +110,8 @@ def upload_files_to_container(container_client: ContainerClient, file_paths: lis
 def upload_blob():
     logger.info("--- Blob runner started ---")
 
-    container_id = "weather-data"
-    connection_str = get_connection_str()
-    container_client = get_container_client(connection_str, container_id)
+    auth_data = get_dotenv_auth_data()
+    container_client = get_container_client(auth_data)
     file_paths = get_files_paths_to_upload("data")
     upload_files_to_container(container_client, file_paths)
 
