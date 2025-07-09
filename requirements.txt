@@ -6,3 +6,6 @@ requests
 numpy
 pandas
 python-json-logger
+apache-airflow
+python-dotenv
+azure-storage-blob 
