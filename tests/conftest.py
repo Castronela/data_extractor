@@ -21,11 +21,11 @@ def test_session_header():
     separator = "=" * 80
 
     logger.info("%s", separator)
-    logger.info("TEST SESSION STARTED: %s")
+    logger.info("TEST SESSION STARTED")
     logger.info("%s", separator)
 
     yield
 
     logger.info("%s", separator)
-    logger.info("TEST SESSION ENDED: %s")
+    logger.info("TEST SESSION ENDED")
     logger.info("%s", separator)

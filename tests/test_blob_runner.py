@@ -37,6 +37,8 @@ def check_for_raised_exception(
         func(*args, **kwargs)
     except exception:
         raised = True
+    except Exception:
+        pass
     if raised:
         test_logger.info("PASSED: %s", description)
     else:
@@ -137,9 +139,9 @@ class TestGetContainerClient:
         try:
             result = get_container_client(auth_data)
             assert result == mock_container_client
-        except Exception:
-            test_logger.info("FAILED: %s", description)
-            assert False, "Expected no Exception"
+        except AssertionError:
+            test_logger.exception("FAILED: %s", description)
+            raise
         else:
             test_logger.info("PASSED: %s:", description)
 
@@ -209,7 +211,7 @@ class TestGetFilesPathsToUpload:
             assert len(result) == 1
             assert result[0] == str(tmp_path / "good.csv")
         except AssertionError:
-            test_logger.info("FAILED: %s", description)
+            test_logger.exception("FAILED: %s", description)
             raise
         else:
             test_logger.info("PASSED: %s", description)
@@ -230,7 +232,7 @@ class TestGetFilesPathsToUpload:
             for item in result:
                 assert item in file_paths
         except AssertionError:
-            test_logger.info("FAILED: %s", description)
+            test_logger.exception("FAILED: %s", description)
             raise
         else:
             test_logger.info("PASSED: %s", description)
