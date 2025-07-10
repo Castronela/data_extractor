@@ -32,22 +32,32 @@ def get_snowflake_auth_data() -> dict:
             raise FileNotFoundError(".env file not found")
         load_dotenv()
         dotenv = dotenv_values()
+
+        mandatory_dotenv_keys = (
+            "SNOWFLAKE_USER",
+            "SNOWFLAKE_PASSWORD",
+            "SNOWFLAKE_ACCOUNT",
+        )
+        for key in mandatory_dotenv_keys:
+            # Check that .env has mandatory keys
+            if key not in dotenv.keys():
+                raise KeyError(f"{key} key is missing from .env")
+            # Check that mandatory keys are not empty
+            if not dotenv[key]:
+                raise ValueError(f"{key} value is empty")
+
         auth_data = {
             "user": dotenv["SNOWFLAKE_USER"],
             "password": dotenv["SNOWFLAKE_PASSWORD"],
             "account": dotenv["SNOWFLAKE_ACCOUNT"],
-            "warehouse": dotenv["SNOWFLAKE_WAREHOUSE"],
-            "database": dotenv["SNOWFLAKE_DATABASE"],
-            "schema": dotenv["SNOWFLAKE_SCHEMA"],
         }
+        if "SNOWFLAKE_WAREHOUSE" in dotenv.keys():
+            auth_data["warehouse"] = dotenv["SNOWFLAKE_WAREHOUSE"]
+        if "SNOWFLAKE_DATABASE" in dotenv.keys():
+            auth_data["database"] = dotenv["SNOWFLAKE_DATABASE"]
+        if "SNOWFLAKE_SCHEMA" in dotenv.keys():
+            auth_data["schema"] = dotenv["schema"]
 
-        # Check that mandatory auth data is not empty
-        if not auth_data["user"]:
-            raise ValueError("user value is empty")
-        if not auth_data["password"]:
-            raise ValueError("password value is empty")
-        if not auth_data["account"]:
-            raise ValueError("account value is empty")
     except Exception as e:
         logger.exception("Failed to load authentication data: %s", e)
         raise
@@ -58,13 +68,14 @@ def get_snowflake_auth_data() -> dict:
 
 def get_connection(auth_data: dict) -> sf.connection.SnowflakeConnection:
     try:
-        # Check that mandatory auth data is not empty
-        if not auth_data["user"]:
-            raise ValueError("user value is empty")
-        if not auth_data["password"]:
-            raise ValueError("password value is empty")
-        if not auth_data["account"]:
-            raise ValueError("account value is empty")
+        mandatory_keys = ("user", "password", "account")
+        for key in mandatory_keys:
+            # Check that mandatory auth keys are present
+            if key not in auth_data.keys():
+                raise KeyError(f"{key} key is missing")
+            # Check that mandatory auth data is not empty
+            if not auth_data[key]:
+                raise ValueError(f"{key} value is empty")
 
         logger.debug(
             "Auth data: USER:'%s', PASSWORD:'%s', ACCOUNT: '%s'",
@@ -72,14 +83,7 @@ def get_connection(auth_data: dict) -> sf.connection.SnowflakeConnection:
             auth_data["password"],
             auth_data["account"],
         )
-        sf_conn = sf.connect(
-            user=auth_data["user"],
-            password=auth_data["password"],
-            account=auth_data["account"],
-            warehouse=auth_data["warehouse"],
-            database=auth_data["database"],
-            schema=auth_data["schema"],
-        )
+        sf_conn = sf.connect(**auth_data)
     except Exception as e:
         logger.exception("Failed to connect to snowflake: %s", e)
         raise
