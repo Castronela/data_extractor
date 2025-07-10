@@ -56,7 +56,7 @@ def get_snowflake_auth_data() -> dict:
     return auth_data
 
 
-def get_connection(auth_data: dict) -> sf.connect:
+def get_connection(auth_data: dict) -> sf.connection.SnowflakeConnection:
     try:
         # Check that mandatory auth data is not empty
         if not auth_data["user"]:
@@ -88,7 +88,7 @@ def get_connection(auth_data: dict) -> sf.connect:
     return sf_conn
 
 
-def get_cursor(sf_conn: sf.connect) -> sf.cursor:
+def get_cursor(sf_conn: sf.connect) -> sf.cursor.SnowflakeCursor:
     try:
         sf_cursor = sf_conn.cursor()
     except Exception as e:
