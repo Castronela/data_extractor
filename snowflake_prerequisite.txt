@@ -1,0 +1,24 @@
+# Create table
+create table if not exists weather_data (
+    time timestamp primary key,
+    temperature float,
+    latitude float,
+    longitude float,
+    generationtime_ms float,
+    utc_offset_seconds integer,
+    timezone text,
+    timezone_abbreviation text,
+    elevation float
+);
+
+# Create stage
+create or replace stage azure_weather_stage
+    URL = 'azure://<YOUR_STORAGE_ACCOUNT>.blob.core.windows.net/<YOUR_CONTAINER_ID>'
+    CREDENTIALS = (
+        AZURE_SAS_TOKEN = <YOUR_SAS_TOKEN>
+    )
+    FILE_FORMAT = (
+        type = 'CSV'
+        skip_header = 1
+        field_optionally_enclosed_by = '"'
+    );
