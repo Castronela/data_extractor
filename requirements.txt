@@ -9,3 +9,5 @@ python-json-logger
 apache-airflow
 python-dotenv
 azure-storage-blob 
+snowflake-connector-python
+pyarrow<19.0.0

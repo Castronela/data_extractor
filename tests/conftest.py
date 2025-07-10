@@ -2,7 +2,7 @@ import pytest
 import logging
 import json
 
-logger = logging.getLogger("test_main")
+logger = logging.getLogger("conftest")
 
 
 def setup_logging():

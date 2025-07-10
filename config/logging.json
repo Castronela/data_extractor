@@ -44,7 +44,7 @@
 		}
 	},
     "loggers": {
-        "test_main": {
+        "conftest": {
             "level": "DEBUG",
             "handlers": ["file_test"]
         },
@@ -53,6 +53,10 @@
             "handlers": ["stdout", "file_log", "json_log"]
         },
         "blob_runner": {
+            "level": "DEBUG",
+            "handlers": ["stdout", "file_log", "json_log"]
+        },
+        "load_to_snowflake": {
             "level": "DEBUG",
             "handlers": ["stdout", "file_log", "json_log"]
         },
