@@ -1,6 +1,7 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from src.extract_weather import extract_data
+from src.transform_weather import transform_data
 from src.blob_runner import upload_blob
 from src.load_to_snowflake import load_to_snowflake
 from datetime import datetime, timedelta
@@ -25,6 +26,9 @@ with DAG(
     task_extract_weather = PythonOperator(
         dag=dag, task_id="run_extract_weather", python_callable=extract_data
     )
+    task_transform_weather = PythonOperator(
+        dag=dag, task_id="run_extract_weather", python_callable=transform_data
+    )
     task_blob_runner = PythonOperator(
         dag=dag, task_id="run_blob_runner", python_callable=upload_blob
     )
@@ -32,4 +36,4 @@ with DAG(
         dag=dag, task_id="run_load_to_snowflake", python_callable=load_to_snowflake
     )
 
-task_extract_weather >> task_blob_runner >> task_load_to_snowflake
+task_extract_weather >> task_transform_weather >> task_blob_runner >> task_load_to_snowflake

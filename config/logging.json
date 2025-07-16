@@ -60,6 +60,10 @@
             "level": "DEBUG",
             "handlers": ["stdout", "file_log", "json_log"]
         },
+        "transform_weather": {
+            "level": "DEBUG",
+            "handlers": ["stdout", "file_log", "json_log"]
+        },
 		"test_extract_weather": {
 			"level": "DEBUG",
 			"handlers": ["file_test"]

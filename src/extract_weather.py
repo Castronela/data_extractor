@@ -36,45 +36,31 @@ def fetch_weather_data(api_url: str) -> dict:
     return response.json()
 
 
-def transform_weather_data(data: dict) -> pd.DataFrame:
-
-    hourly = data["hourly"]
-    hourly_df = pd.DataFrame(hourly)
-
-    metadata = data.copy()
-    del metadata["hourly"]
-    del metadata["hourly_units"]
-
-    for key, value in metadata.items():
-        hourly_df[key] = value
-    logger.info("Weather data transformed")
-    return hourly_df
-
-
-def save_to_csv(df: pd.DataFrame, output_dir="data") -> str:
+def save_to_csv(df: pd.DataFrame, file_prefix: str, output_dir: str, save_index: bool =False) -> str:
     today_str = datetime.today().strftime("%Y%m%d")
-    filename = f"{output_dir}/weather_{today_str}.csv"
+    filename = f"{output_dir}/{file_prefix}_{today_str}.csv"
     try:
-        logger.debug("Saving weather data to %s", filename)
-        df.to_csv(filename, index=False)
+        logger.debug("Saving csv to %s", filename)
+        df.to_csv(filename, index=save_index)
     except Exception:
         logger.exception("Failed to save to %s", filename)
         raise
     else:
-        logger.info("Weather data saved to %s", filename)
+        logger.info("Saved csv to %s", filename)
     return filename
 
-
+import numpy as np
 @setup_logging
 def extract_data():
     logger.info("--- Weather data extraction started ---")
 
     api_url = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&hourly=temperature_2m"
     weather_json = fetch_weather_data(api_url)
-    df = transform_weather_data(weather_json)
-    save_to_csv(df)
+    df = pd.DataFrame(weather_json)
+    filename = save_to_csv(df, "weather", "data/raw", save_index=True)
 
     logger.info("--- Weather data extraction ended ---")
+    return filename
 
 
 if __name__ == "__main__":
