@@ -24,24 +24,21 @@ with DAG(
 ) as dag:
 
     task_extract_weather = PythonOperator(
-        dag=dag,
-        task_id="run_extract_weather",
-        python_callable=extract_data
+        dag=dag, task_id="run_extract_weather", python_callable=extract_data
     )
     task_transform_weather = PythonOperator(
-        dag=dag,
-        task_id="run_transform_weather",
-        python_callable=transform_data
+        dag=dag, task_id="run_transform_weather", python_callable=transform_data
     )
     task_blob_runner = PythonOperator(
-        dag=dag, 
-        task_id="run_blob_runner",
-        python_callable=upload_blob
+        dag=dag, task_id="run_blob_runner", python_callable=upload_blob
     )
     task_load_to_snowflake = PythonOperator(
-        dag=dag, 
-        task_id="run_load_to_snowflake",
-        python_callable=load_to_snowflake
+        dag=dag, task_id="run_load_to_snowflake", python_callable=load_to_snowflake
     )
 
-task_extract_weather >> task_transform_weather >> task_blob_runner >> task_load_to_snowflake
+(
+    task_extract_weather
+    >> task_transform_weather
+    >> task_blob_runner
+    >> task_load_to_snowflake
+)

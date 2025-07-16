@@ -36,7 +36,9 @@ def fetch_weather_data(api_url: str) -> dict:
     return response.json()
 
 
-def save_to_csv(df: pd.DataFrame, file_prefix: str, output_dir: str, save_index: bool =False) -> str:
+def save_to_csv(
+    df: pd.DataFrame, file_prefix: str, output_dir: str, save_index: bool = False
+) -> str:
     today_str = datetime.today().strftime("%Y%m%d")
     filename = f"{output_dir}/{file_prefix}_{today_str}.csv"
     try:
@@ -48,7 +50,7 @@ def save_to_csv(df: pd.DataFrame, file_prefix: str, output_dir: str, save_index:
         logger.info("Saved csv to '%s'", filename)
     return filename
 
-import numpy as np
+
 @setup_logging
 def extract_data(ti=None):
     logger.info("--- Weather data extraction started ---")

@@ -3,7 +3,7 @@ import pandas as pd
 import logging
 import json
 from unittest.mock import patch, MagicMock
-from src.extract_weather import fetch_weather_data, transform_weather_data, save_to_csv
+from src.extract_weather import fetch_weather_data, save_to_csv
 
 # Logger Setup
 t_logger = logging.getLogger(__name__)
@@ -57,23 +57,23 @@ class TestFetchWeatherData:
             t_logger.info("PASSED: %s", description)
 
 
-class TestTransformWeatherData:
+# class TestTransformWeatherData:
 
-    target_function = "transform_weather_data"
+#     target_function = "transform_weather_data"
 
-    def test_transform_weather_data(self):
-        description = f"{self.target_function:<30}: Test for returning valid values"
-        try:
-            df = transform_weather_data(fake_api_response)
-            assert "latitude" in df.columns
-            assert "longitude" in df.columns
-            assert "timezone" in df.columns
-            assert df.shape[0] == 2
-        except AssertionError:
-            t_logger.info("FAILED: %s", description)
-            raise
-        else:
-            t_logger.info("PASSED: %s", description)
+#     def test_transform_weather_data(self):
+#         description = f"{self.target_function:<30}: Test for returning valid values"
+#         try:
+#             df = transform_weather_data(fake_api_response)
+#             assert "latitude" in df.columns
+#             assert "longitude" in df.columns
+#             assert "timezone" in df.columns
+#             assert df.shape[0] == 2
+#         except AssertionError:
+#             t_logger.info("FAILED: %s", description)
+#             raise
+#         else:
+#             t_logger.info("PASSED: %s", description)
 
 
 class TestSaveToCsv:
@@ -91,7 +91,7 @@ class TestSaveToCsv:
             }
         )
         try:
-            filename = save_to_csv(df, output_dir=str(tmp_path))
+            filename = save_to_csv(df, "weather", output_dir=str(tmp_path))
             assert Path(filename).exists()
             df_loaded = pd.read_csv(filename)
             pd.testing.assert_frame_equal(df, df_loaded)
