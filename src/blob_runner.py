@@ -112,7 +112,7 @@ def upload_blob():
 
     auth_data = get_dotenv_auth_data()
     container_client = get_container_client(auth_data)
-    file_paths = get_files_paths_to_upload("data")
+    file_paths = get_files_paths_to_upload("data/processed")
     upload_files_to_container(container_client, file_paths)
 
     logger.info("--- Blob runner ended ---")
