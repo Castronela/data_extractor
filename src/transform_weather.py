@@ -1,16 +1,18 @@
 import logging
 import json
-import csv
 import pandas as pd
-from extract_weather import save_to_csv
+try:
+    from .extract_weather import save_to_csv
+except ImportError:
+    from extract_weather import save_to_csv
 from pathlib import Path
-
+from datetime import datetime
 
 
 logger = logging.getLogger("transform_weather")
 
 def setup_logger(func):
-    def wrapper(*args, **kwargs):
+    def wrapper(ti):
         try:
             config_path = "config/logging.json"
             if not Path(config_path).exists():
@@ -21,10 +23,43 @@ def setup_logger(func):
         except Exception as e:
             logging.exception("Failed to setup logger: %s", e)
             raise
-        return func(*args, **kwargs)
+        return func(ti)
     return wrapper
 
-def transform_hourly(data: pd.DataFrame) -> pd.DataFrame:
+def is_file_empty(filename: str) -> bool:
+    with open(filename, mode="r", encoding="utf-8") as file:
+        content = file.read().strip()
+    return not content
+
+def get_filename_xcom(ti) -> str:
+    try:
+        filename = ti.xcom_pull(key="filename", task_ids="run_extract_weather")
+    except Exception as e:
+        logger.exception("Failed to retrieve file name from Xcom: %s", e)
+        raise
+    else:
+        logger.info("Retrieved filename '%s' from Xcom", filename)
+    return filename
+
+def get_filename_manually(input_dir: str ="data/raw", file_prefix: str ="weather") -> str:
+    today_str = datetime.today().strftime("%Y%m%d")
+    filename = f"{input_dir}/weather_{today_str}.csv"
+    return filename
+
+def get_csv_df(filename: str) -> pd.DataFrame:  
+    try:
+        if not Path(filename).exists():
+            raise FileNotFoundError("File '%s' not found" % (filename))
+        if is_file_empty(filename):
+            raise pd.errors.EmptyDataError("File '%s' is empty" % (filename))
+        file_df = pd.read_csv(filename)
+    except Exception as e:
+        logger.exception("Failed to upload csv file data: %s", e)
+    else:
+        logger.info("Retrieved data from csv file '%s'", filename)
+    return file_df
+
+def process_hourly(data: pd.DataFrame) -> pd.DataFrame:
     # Set first column as index and remove index name
     data.set_index(data.columns[0], inplace=True)
     data.index.name = ''
@@ -38,16 +73,16 @@ def transform_hourly(data: pd.DataFrame) -> pd.DataFrame:
     hourly = data['hourly']
     hourly_df = pd.DataFrame(columns=hourly.index)
     for index in hourly.index:
-        hourly_df[index] = hourly[index].strip("[] ").replace("'", "").split(",")
+        cleaned_values = [ val.strip() for val in hourly[index].strip("[] ").replace("'", "").split(",") ]
+        hourly_df[index] = cleaned_values
 
     # Perform appropriate typecasts
     hourly_df = hourly_df.astype({time_unit: 'datetime64[ns]', temp_unit: 'float64'})
 
     return hourly_df
 
-
-def transform_weather_data(data: pd.DataFrame) -> pd.DataFrame:
-    hourly_df = transform_hourly(data)
+def process_weather_data(data: pd.DataFrame) -> pd.DataFrame:
+    hourly_df = process_hourly(data)
 
     data.drop(columns=['hourly_units', 'hourly'], inplace=True)
 
@@ -56,15 +91,27 @@ def transform_weather_data(data: pd.DataFrame) -> pd.DataFrame:
     return hourly_df
 
 @setup_logger
-def transform_data(*args, **kwargs) -> None:
+def transform_data(ti) -> None:
+    logger.info("--- Transforming weather data started ---")
 
-    filename = "data/raw/weather_20250715.csv"
-    df_input = pd.read_csv(filename)
-    df_processed = transform_weather_data(df_input)
-    print(df_processed.info())
-    filename = save_to_csv(df_processed, "weather", "data/processed")
-    
-    return filename
+    in_filename = get_filename_xcom(ti)
+    csv_df = get_csv_df(in_filename)
+    processed_df = process_weather_data(csv_df)
+    out_filename = save_to_csv(processed_df, "weather", "data/processed")
+
+    logger.info("--- Transforming weather data ended ---")
+    return out_filename
+
+@setup_logger
+def transform_data_local(ti=None) ->None:
+    logger.info("--- Transforming weather data started ---")
+
+    in_filename = get_filename_manually()
+    csv_df = get_csv_df(in_filename)
+    processed_df = process_weather_data(csv_df)
+    out_filename = save_to_csv(processed_df, "weather", "data/processed")
+
+    logger.info("--- Transforming weather data ended ---")
 
 if __name__ == "__main__":
-    transform_data()
+    transform_data_local(None)

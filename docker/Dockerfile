@@ -16,7 +16,7 @@ COPY --chown=airflow:root src/ /opt/airflow/src/
 COPY --chown=airflow:root dags/ /opt/airflow/dags/
 COPY --chown=airflow:root config/ /opt/airflow/config/
 # Create output dirs
-RUN mkdir -p /opt/airflow/logs /opt/airflow/data
+RUN mkdir -p /opt/airflow/logs /opt/airflow/data/raw /opt/airflow/data/processed
 # Copy entrypoint script
 COPY docker/entrypoint.sh /opt/airflow/entrypoint.sh
 

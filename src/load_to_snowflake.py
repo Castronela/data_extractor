@@ -56,7 +56,7 @@ def get_snowflake_auth_data() -> dict:
         if "SNOWFLAKE_DATABASE" in dotenv.keys():
             auth_data["database"] = dotenv["SNOWFLAKE_DATABASE"]
         if "SNOWFLAKE_SCHEMA" in dotenv.keys():
-            auth_data["schema"] = dotenv["schema"]
+            auth_data["schema"] = dotenv["SNOWFLAKE_SCHEMA"]
 
     except Exception as e:
         logger.exception("Failed to load authentication data: %s", e)
