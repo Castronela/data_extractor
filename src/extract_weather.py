@@ -4,24 +4,23 @@ import logging
 import json
 import pandas as pd
 from datetime import datetime
+from pathlib import Path
 
 # Logger Setup
 logger = logging.getLogger("extract_weather")
 
 
-def setup_logging(func):
-    def wrapper(ti):
-        config_file = "config/logging.json"
-        try:
-            with open(config_file, encoding="utf-8") as file:
-                config = json.load(file)
-        except FileNotFoundError:
-            logger.exception("Logging config file '%s' does not exist", config_file)
-            raise
+def setup_logger():
+    config_path = "config/logging.json"
+    try:
+        if not Path(config_path).exists():
+            raise FileNotFoundError(f"file {config_path} not found")
+        with open(config_path, encoding="utf-8") as file:
+            config = json.load(file)
         logging.config.dictConfig(config)
-        func(ti)
-
-    return wrapper
+    except Exception as e:
+        logging.exception("Failed to setup logger: %s", e)
+        raise
 
 
 def fetch_weather_data(api_url: str) -> dict:
@@ -51,8 +50,8 @@ def save_to_csv(
     return filename
 
 
-@setup_logging
 def extract_data(ti=None):
+    setup_logger()
     logger.info("--- Weather data extraction started ---")
 
     api_url = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&hourly=temperature_2m"

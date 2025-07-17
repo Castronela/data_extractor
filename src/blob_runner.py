@@ -9,19 +9,17 @@ from pathlib import Path
 logger = logging.getLogger("blob_runner")
 
 
-def setup_logging(func):
-    def wrapper():
-        config_file = "config/logging.json"
-        try:
-            with open(config_file, encoding="utf-8") as file:
-                config = json.load(file)
-            logging.config.dictConfig(config)
-        except Exception as e:
-            logger.exception("Logging setup failed: %s", e)
-            raise
-        return func()
-
-    return wrapper
+def setup_logger():
+    config_path = "config/logging.json"
+    try:
+        if not Path(config_path).exists():
+            raise FileNotFoundError(f"file {config_path} not found")
+        with open(config_path, encoding="utf-8") as file:
+            config = json.load(file)
+        logging.config.dictConfig(config)
+    except Exception as e:
+        logging.exception("Failed to setup logger: %s", e)
+        raise
 
 
 def get_dotenv_auth_data() -> dict:
@@ -106,8 +104,8 @@ def upload_files_to_container(container_client: ContainerClient, file_paths: lis
             logger.info("File uploaded to blob container")
 
 
-@setup_logging
 def upload_blob():
+    setup_logger()
     logger.info("--- Blob runner started ---")
 
     auth_data = get_dotenv_auth_data()

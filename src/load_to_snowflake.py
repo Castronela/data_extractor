@@ -9,21 +9,17 @@ from datetime import datetime
 logger = logging.getLogger("load_to_snowflake")
 
 
-def setup_logger(func):
-    def wrapper():
-        try:
-            config_path = "config/logging.json"
-            if not Path(config_path).exists():
-                raise FileNotFoundError(f"file {config_path} not found")
-            with open(config_path, encoding="utf-8") as file:
-                config = json.load(file)
-            logging.config.dictConfig(config)
-        except Exception as e:
-            logging.exception("Failed to setup logger: %s", e)
-            raise
-        return func()
-
-    return wrapper
+def setup_logger():
+    config_path = "config/logging.json"
+    try:
+        if not Path(config_path).exists():
+            raise FileNotFoundError(f"file {config_path} not found")
+        with open(config_path, encoding="utf-8") as file:
+            config = json.load(file)
+        logging.config.dictConfig(config)
+    except Exception as e:
+        logging.exception("Failed to setup logger: %s", e)
+        raise
 
 
 def get_snowflake_auth_data() -> dict:
@@ -124,8 +120,8 @@ def build_copy_sql() -> str:
     """
 
 
-@setup_logger
 def load_to_snowflake() -> None:
+    setup_logger()
     logger.info("--- Load to Snowflake started ---")
 
     auth_data = get_snowflake_auth_data()

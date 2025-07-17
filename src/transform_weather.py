@@ -13,21 +13,17 @@ from datetime import datetime
 logger = logging.getLogger("transform_weather")
 
 
-def setup_logger(func):
-    def wrapper(ti):
-        try:
-            config_path = "config/logging.json"
-            if not Path(config_path).exists():
-                raise FileNotFoundError(f"file {config_path} not found")
-            with open(config_path, encoding="utf-8") as file:
-                config = json.load(file)
-            logging.config.dictConfig(config)
-        except Exception as e:
-            logging.exception("Failed to setup logger: %s", e)
-            raise
-        return func(ti)
-
-    return wrapper
+def setup_logger():
+    config_path = "config/logging.json"
+    try:
+        if not Path(config_path).exists():
+            raise FileNotFoundError(f"file {config_path} not found")
+        with open(config_path, encoding="utf-8") as file:
+            config = json.load(file)
+        logging.config.dictConfig(config)
+    except Exception as e:
+        logging.exception("Failed to setup logger: %s", e)
+        raise
 
 
 def is_file_empty(filename: str) -> bool:
@@ -105,8 +101,8 @@ def process_weather_data(data: pd.DataFrame) -> pd.DataFrame:
     return hourly_df
 
 
-@setup_logger
 def transform_data(ti) -> None:
+    setup_logger()
     logger.info("--- Transforming weather data started ---")
 
     in_filename = get_filename_xcom(ti)
@@ -118,8 +114,8 @@ def transform_data(ti) -> None:
     return out_filename
 
 
-@setup_logger
 def transform_data_local(ti=None) -> None:
+    setup_logger()
     logger.info("--- Transforming weather data started ---")
 
     _ = ti
