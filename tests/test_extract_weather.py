@@ -1,26 +1,13 @@
+from src.extract_weather import fetch_weather_data
+from src.helper import setup_logger, save_to_csv
 from pathlib import Path
 import pandas as pd
 import logging
-import json
 from unittest.mock import patch, MagicMock
-from src.extract_weather import fetch_weather_data, save_to_csv
 
 # Logger Setup
 t_logger = logging.getLogger(__name__)
-
-
-def setup_logging():
-    config_file = "config/logging.json"
-    try:
-        with open(config_file, encoding="utf-8") as file:
-            config = json.load(file)
-        logging.config.dictConfig(config)
-    except Exception as e:
-        logging.exception("Logging setup failed: %s", e)
-        raise
-
-
-setup_logging()
+setup_logger()
 
 # Sample fake API JSON response
 fake_api_response = {
@@ -57,25 +44,6 @@ class TestFetchWeatherData:
             t_logger.info("PASSED: %s", description)
 
 
-# class TestTransformWeatherData:
-
-#     target_function = "transform_weather_data"
-
-#     def test_transform_weather_data(self):
-#         description = f"{self.target_function:<30}: Test for returning valid values"
-#         try:
-#             df = transform_weather_data(fake_api_response)
-#             assert "latitude" in df.columns
-#             assert "longitude" in df.columns
-#             assert "timezone" in df.columns
-#             assert df.shape[0] == 2
-#         except AssertionError:
-#             t_logger.info("FAILED: %s", description)
-#             raise
-#         else:
-#             t_logger.info("PASSED: %s", description)
-
-
 class TestSaveToCsv:
 
     target_function = "save_to_csv"
@@ -91,7 +59,9 @@ class TestSaveToCsv:
             }
         )
         try:
-            filename = save_to_csv(df, "weather", output_dir=str(tmp_path))
+            filename = save_to_csv(
+                df, "weather", output_dir=str(tmp_path), logger=t_logger
+            )
             assert Path(filename).exists()
             df_loaded = pd.read_csv(filename)
             pd.testing.assert_frame_equal(df, df_loaded)

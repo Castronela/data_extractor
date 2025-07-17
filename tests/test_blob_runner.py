@@ -4,8 +4,9 @@ from src.blob_runner import (
     get_files_paths_to_upload,
     upload_files_to_container,
 )
+from src.helper import setup_logger
+from helper import check_for_raised_exception
 import logging
-import json
 import shutil
 import os
 import pytest
@@ -13,37 +14,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 test_logger = logging.getLogger(__name__)
-
-
-def setup_logging():
-    config_file = "config/logging.json"
-    try:
-        with open(config_file, encoding="utf-8") as file:
-            config = json.load(file)
-        logging.config.dictConfig(config)
-    except Exception as e:
-        logging.exception("Logging setup failed: %s", e)
-        raise
-
-
-setup_logging()
-
-
-def check_for_raised_exception(
-    exception: Exception, description: str, func, *args, **kwargs
-):
-    raised = False
-    try:
-        func(*args, **kwargs)
-    except exception:
-        raised = True
-    except Exception:
-        pass
-    if raised:
-        test_logger.info("PASSED: %s", description)
-    else:
-        test_logger.info("FAILED: %s", description)
-        assert False, f"Expected {exception}"
+setup_logger()
 
 
 class TestGetDotenvAuthData:
@@ -62,7 +33,9 @@ class TestGetDotenvAuthData:
             os.remove(env_cwd_path)
 
         # Test for exception raised
-        check_for_raised_exception(FileNotFoundError, description, get_dotenv_auth_data)
+        check_for_raised_exception(
+            FileNotFoundError, description, test_logger, get_dotenv_auth_data
+        )
 
         # Restore original .env file
         if env_tmp_path.is_file():
@@ -81,7 +54,9 @@ class TestGetDotenvAuthData:
             file.write("")
 
         # Test for exception raised
-        check_for_raised_exception(KeyError, description, get_dotenv_auth_data)
+        check_for_raised_exception(
+            KeyError, description, test_logger, get_dotenv_auth_data
+        )
 
         # Restore original .env file
         if env_tmp_path.is_file():
@@ -109,7 +84,9 @@ class TestGetDotenvAuthData:
             file.write(dotenv_content)
 
         # Test for exception raised
-        check_for_raised_exception(ValueError, description, get_dotenv_auth_data)
+        check_for_raised_exception(
+            ValueError, description, test_logger, get_dotenv_auth_data
+        )
 
         # Restore original .env file
         if env_tmp_path.is_file():
@@ -164,7 +141,7 @@ class TestGetContainerClient:
         }
 
         check_for_raised_exception(
-            Exception, description, get_container_client, auth_data
+            Exception, description, test_logger, get_container_client, auth_data
         )
 
     # Test if function handles empty connection string / container id
@@ -188,7 +165,7 @@ class TestGetContainerClient:
         )
         auth_data = {"connection_str": connection_str, "container_id": container_id}
         check_for_raised_exception(
-            ValueError, description, get_container_client, auth_data
+            ValueError, description, test_logger, get_container_client, auth_data
         )
 
 
@@ -245,7 +222,7 @@ class TestGetFilesPathsToUpload:
 
         bad_path = "/dev/null/subdir"
         check_for_raised_exception(
-            Exception, description, get_files_paths_to_upload, bad_path
+            Exception, description, test_logger, get_files_paths_to_upload, bad_path
         )
 
 
@@ -267,6 +244,7 @@ class TestUploadFilesToContainer:
         check_for_raised_exception(
             Exception,
             description,
+            test_logger,
             upload_files_to_container,
             mock_container_client,
             bad_file_path,
@@ -286,6 +264,7 @@ class TestUploadFilesToContainer:
         check_for_raised_exception(
             Exception,
             description,
+            test_logger,
             upload_files_to_container,
             mock_container_client,
             test_file_path,

@@ -68,6 +68,10 @@
 			"level": "DEBUG",
 			"handlers": ["file_test"]
 		},
+		"test_transform_weather": {
+			"level": "DEBUG",
+			"handlers": ["file_test"]
+		},
 		"test_blob_runner": {
 			"level": "DEBUG",
 			"handlers": ["file_test"]

@@ -1,25 +1,15 @@
+try:
+    from helper import setup_logger
+except ImportError:
+    from .helper import setup_logger
 import logging
-import json
-import logging.config
 from dotenv import load_dotenv, dotenv_values
 import snowflake.connector as sf
 from pathlib import Path
 from datetime import datetime
 
 logger = logging.getLogger("load_to_snowflake")
-
-
-def setup_logger():
-    config_path = "config/logging.json"
-    try:
-        if not Path(config_path).exists():
-            raise FileNotFoundError(f"file {config_path} not found")
-        with open(config_path, encoding="utf-8") as file:
-            config = json.load(file)
-        logging.config.dictConfig(config)
-    except Exception as e:
-        logging.exception("Failed to setup logger: %s", e)
-        raise
+setup_logger()
 
 
 def get_snowflake_auth_data() -> dict:

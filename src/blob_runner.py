@@ -1,25 +1,15 @@
-import logging.config
+try:
+    from helper import setup_logger
+except ImportError:
+    from .helper import setup_logger
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from dotenv import load_dotenv, dotenv_values
 import logging
-import json
 import azure
 from pathlib import Path
 
 logger = logging.getLogger("blob_runner")
-
-
-def setup_logger():
-    config_path = "config/logging.json"
-    try:
-        if not Path(config_path).exists():
-            raise FileNotFoundError(f"file {config_path} not found")
-        with open(config_path, encoding="utf-8") as file:
-            config = json.load(file)
-        logging.config.dictConfig(config)
-    except Exception as e:
-        logging.exception("Failed to setup logger: %s", e)
-        raise
+setup_logger()
 
 
 def get_dotenv_auth_data() -> dict:

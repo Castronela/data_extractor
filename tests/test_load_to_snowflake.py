@@ -4,8 +4,9 @@ from src.load_to_snowflake import (
     get_cursor,
     execute_sql,
 )
+from src.helper import setup_logger
+from helper import check_for_raised_exception
 import logging
-import json
 import shutil
 import os
 import pytest
@@ -13,37 +14,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 test_logger = logging.getLogger(__name__)
-
-
-def setup_logging():
-    config_file = "config/logging.json"
-    try:
-        with open(config_file, encoding="utf-8") as file:
-            config = json.load(file)
-        logging.config.dictConfig(config)
-    except Exception as e:
-        logging.exception("Logging setup failed: %s", e)
-        raise
-
-
-setup_logging()
-
-
-def check_for_raised_exception(
-    exception: Exception, description: str, func, *args, **kwargs
-):
-    raised = False
-    try:
-        func(*args, **kwargs)
-    except exception:
-        raised = True
-    except Exception:
-        pass
-    if raised:
-        test_logger.info("PASSED: %s", description)
-    else:
-        test_logger.info("FAILED: %s", description)
-        assert False, f"Expected {exception}"
+setup_logger()
 
 
 class TestGetSnowflakeAuthData:
@@ -63,7 +34,7 @@ class TestGetSnowflakeAuthData:
 
         # Test for exception raised
         check_for_raised_exception(
-            FileNotFoundError, description, get_snowflake_auth_data
+            FileNotFoundError, description, test_logger, get_snowflake_auth_data
         )
 
         # Restore original .env file
@@ -88,7 +59,9 @@ class TestGetSnowflakeAuthData:
         ) as mock_dotenv_values:
             mock_load_dotenv.return_value = None
             mock_dotenv_values.return_value = dotenv
-            check_for_raised_exception(KeyError, description, get_snowflake_auth_data)
+            check_for_raised_exception(
+                KeyError, description, test_logger, get_snowflake_auth_data
+            )
 
     @pytest.mark.parametrize(
         "user, password, account",
@@ -112,7 +85,9 @@ class TestGetSnowflakeAuthData:
                 "SNOWFLAKE_PASSWORD": password,
                 "SNOWFLAKE_ACCOUNT": account,
             }
-            check_for_raised_exception(ValueError, description, get_snowflake_auth_data)
+            check_for_raised_exception(
+                ValueError, description, test_logger, get_snowflake_auth_data
+            )
 
 
 class TestGetConnection:
@@ -135,7 +110,9 @@ class TestGetConnection:
         with patch("src.load_to_snowflake.sf") as mock_sf:
             mock_sf_conn = Mock()
             mock_sf.connect.return_value = mock_sf_conn
-            check_for_raised_exception(KeyError, description, get_connection, auth_data)
+            check_for_raised_exception(
+                KeyError, description, test_logger, get_connection, auth_data
+            )
 
     @pytest.mark.parametrize(
         "user, password, account",
@@ -159,7 +136,7 @@ class TestGetConnection:
             mock_sf_conn = Mock()
             mock_sf.connect.return_value = mock_sf_conn
             check_for_raised_exception(
-                ValueError, description, get_connection, auth_data
+                ValueError, description, test_logger, get_connection, auth_data
             )
 
     @patch("src.load_to_snowflake.sf")
@@ -197,7 +174,9 @@ class TestGetConnection:
         mock_sf_conn = Mock()
         mock_sf.connect.return_value = mock_sf_conn
         mock_sf.connect.side_effect = Exception
-        check_for_raised_exception(Exception, description, auth_data)
+        check_for_raised_exception(
+            Exception, description, test_logger, get_connection, auth_data
+        )
 
 
 class TestGetCursor:
@@ -229,7 +208,9 @@ class TestGetCursor:
         mock_sf_cursor = Mock()
         mock_sf_conn.cursor.return_value = mock_sf_cursor
         mock_sf_conn.cursor.side_effect = Exception
-        check_for_raised_exception(Exception, description, get_cursor, mock_sf_conn)
+        check_for_raised_exception(
+            Exception, description, test_logger, get_cursor, mock_sf_conn
+        )
 
 
 class TestExecuteSql:
@@ -244,7 +225,12 @@ class TestExecuteSql:
         mock_sf_cursor.execute = lambda: None
         empty_sql_instruction = ""
         check_for_raised_exception(
-            ValueError, description, execute_sql, mock_sf_cursor, empty_sql_instruction
+            ValueError,
+            description,
+            test_logger,
+            execute_sql,
+            mock_sf_cursor,
+            empty_sql_instruction,
         )
 
     def test_failed_sql_exec(self) -> None:
@@ -255,5 +241,10 @@ class TestExecuteSql:
         mock_sf_cursor.execute = lambda: None
         sql_instruction = "sql instruction"
         check_for_raised_exception(
-            Exception, description, execute_sql, mock_sf_cursor, sql_instruction
+            Exception,
+            description,
+            test_logger,
+            execute_sql,
+            mock_sf_cursor,
+            sql_instruction,
         )

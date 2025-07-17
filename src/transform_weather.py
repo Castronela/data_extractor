@@ -1,35 +1,16 @@
 import logging
-import json
 import pandas as pd
 
 try:
-    from .extract_weather import save_to_csv
+    from .helper import setup_logger, save_to_csv, is_file_empty
 except ImportError:
-    from extract_weather import save_to_csv
+    from helper import setup_logger, save_to_csv, is_file_empty
 from pathlib import Path
 from datetime import datetime
 
 
 logger = logging.getLogger("transform_weather")
-
-
-def setup_logger():
-    config_path = "config/logging.json"
-    try:
-        if not Path(config_path).exists():
-            raise FileNotFoundError(f"file {config_path} not found")
-        with open(config_path, encoding="utf-8") as file:
-            config = json.load(file)
-        logging.config.dictConfig(config)
-    except Exception as e:
-        logging.exception("Failed to setup logger: %s", e)
-        raise
-
-
-def is_file_empty(filename: str) -> bool:
-    with open(filename, mode="r", encoding="utf-8") as file:
-        content = file.read().strip()
-    return not content
+setup_logger()
 
 
 def get_filename_xcom(ti) -> str:
@@ -59,7 +40,8 @@ def get_csv_df(filename: str) -> pd.DataFrame:
             raise pd.errors.EmptyDataError("File '%s' is empty" % (filename))
         file_df = pd.read_csv(filename)
     except Exception as e:
-        logger.exception("Failed to upload csv file data: %s", e)
+        logger.exception("Failed to import csv file data: %s", e)
+        raise
     else:
         logger.info("Retrieved data from csv file '%s'", filename)
     return file_df
@@ -92,12 +74,16 @@ def process_hourly(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def process_weather_data(data: pd.DataFrame) -> pd.DataFrame:
+    if data.empty:
+        logger.error("Failed to process weather data: Dataframe is empty")
+        raise ValueError("Dataframe 'data' is empty")
     hourly_df = process_hourly(data)
 
     data.drop(columns=["hourly_units", "hourly"], inplace=True)
 
     for column in data.columns:
         hourly_df[column] = data.iloc[0][column]
+    logger.info("Weather data processed")
     return hourly_df
 
 
@@ -108,7 +94,7 @@ def transform_data(ti) -> None:
     in_filename = get_filename_xcom(ti)
     csv_df = get_csv_df(in_filename)
     processed_df = process_weather_data(csv_df)
-    out_filename = save_to_csv(processed_df, "weather", "data/processed")
+    out_filename = save_to_csv(processed_df, "weather", "data/processed", logger)
 
     logger.info("--- Transforming weather data ended ---")
     return out_filename
@@ -122,7 +108,7 @@ def transform_data_local(ti=None) -> None:
     in_filename = get_filename_manually()
     csv_df = get_csv_df(in_filename)
     processed_df = process_weather_data(csv_df)
-    out_filename = save_to_csv(processed_df, "weather", "data/processed")
+    out_filename = save_to_csv(processed_df, "weather", "data/processed", logger)
 
     logger.info("--- Transforming weather data ended ---")
     return out_filename
