@@ -6,7 +6,6 @@ import azure
 from pathlib import Path
 
 logger = logging.getLogger("blob_runner")
-setup_logger()
 
 
 def get_dotenv_auth_data() -> dict:

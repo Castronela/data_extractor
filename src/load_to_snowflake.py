@@ -6,7 +6,6 @@ from pathlib import Path
 from datetime import datetime
 
 logger = logging.getLogger("load_to_snowflake")
-setup_logger()
 
 
 def get_snowflake_auth_data() -> dict:

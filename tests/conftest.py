@@ -1,19 +1,9 @@
 import pytest
 import logging
-import json
+from src.helper import setup_logger
 
 logger = logging.getLogger("conftest")
-
-
-def setup_logging():
-    config_file = "config/logging.json"
-    try:
-        with open(config_file, encoding="utf-8") as file:
-            config = json.load(file)
-        logging.config.dictConfig(config)
-    except Exception as e:
-        logging.exception("Logging setup failed: %s", e)
-        raise
+setup_logger(overwrite_config=True)
 
 
 @pytest.fixture(scope="session", autouse=True)

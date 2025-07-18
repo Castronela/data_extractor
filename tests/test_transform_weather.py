@@ -10,11 +10,10 @@ import logging
 import pandas as pd
 import pandas.api.types as ptypes
 from unittest.mock import Mock
-import re
 
 test_logger = logging.getLogger(__name__)
 
-setup_logger()
+setup_logger(overwrite_config=True)
 
 
 class TestGetFilenameXcom:
@@ -118,20 +117,15 @@ class TestProcessHourly:
             row_count = len(result_df)
             assert column_count == 2, "Columns count is {column_count}; should be 2"
             column_time = result_df.columns[0]
-            column_temp = result_df.columns[1]
-            assert (
-                re.fullmatch(r"^time\([^)]+\)", column_time) is not None
-            ), f"Column name '{column_time}' should match pattern 'time(...)'"
-            assert (
-                re.fullmatch(r"^temperature\([^)]+\)", column_temp) is not None
-            ), f"Column name '{column_temp}' should match pattern 'temperature(...)'"
             assert row_count == 168, f"Row count is {row_count}; should be 168"
             assert ptypes.is_datetime64_any_dtype(
                 result_df[column_time]
             ), f"'{column_time}' column is dtype {result_df[column_time].dtypes}; should be 'datetime64[ns]'"
-            assert ptypes.is_float_dtype(
-                result_df[column_temp]
-            ), f"'{column_temp}' column is dtype {result_df[column_temp].dtypes}; should be 'float'"
+            assert all(
+                ptypes.is_float_dtype(result_df[column])
+                for column in result_df.columns
+                if not column.lower().startswith("time")
+            ), "Some columns (except 'time' column) are not type 'float'"
         except AssertionError as e:
             test_logger.exception("FAILED: %s: %s", description, e)
             raise

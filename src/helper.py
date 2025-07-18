@@ -7,7 +7,9 @@ from datetime import datetime
 import pandas as pd
 
 
-def setup_logger():
+def setup_logger(overwrite_config: bool = False):
+    if not overwrite_config and logging.getLogger().handlers:
+        return
     config_path = "config/logging.json"
     try:
         if not Path(config_path).exists():
@@ -16,15 +18,18 @@ def setup_logger():
             config = json.load(file)
         dictConfig(config)
     except Exception as e:
-        logging.exception("Failed to setup logger: %s", e)
-        raise
+        print("Failed to setup logger: %s", e)
+        print("Using default logging config")
+        logging.basicConfig(
+            level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+        )
 
 
 def save_to_csv(
     df: pd.DataFrame,
     file_prefix: str,
     output_dir: str,
-    logger: Logger,
+    logger: Logger | None = None,
     save_index: bool = False,
 ) -> str:
     today_str = datetime.today().strftime("%Y%m%d")
@@ -32,10 +37,12 @@ def save_to_csv(
     try:
         df.to_csv(filename, index=save_index)
     except Exception:
-        logger.exception("Failed to save to '%s'", filename)
+        if logger:
+            logger.exception("Failed to save to '%s'", filename)
         raise
     else:
-        logger.info("Saved csv to '%s'", filename)
+        if logger:
+            logger.info("Saved csv to '%s'", filename)
     return filename
 
 

@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 
 # Logger Setup
 t_logger = logging.getLogger(__name__)
-setup_logger()
+setup_logger(overwrite_config=True)
 
 # Sample fake API JSON response
 fake_api_response = {
@@ -59,9 +59,7 @@ class TestSaveToCsv:
             }
         )
         try:
-            filename = save_to_csv(
-                df, "weather", output_dir=str(tmp_path), logger=t_logger
-            )
+            filename = save_to_csv(df, "weather", output_dir=str(tmp_path))
             assert Path(filename).exists()
             df_loaded = pd.read_csv(filename)
             pd.testing.assert_frame_equal(df, df_loaded)

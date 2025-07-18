@@ -70,7 +70,7 @@
 		},
 		"test_transform_weather": {
 			"level": "DEBUG",
-			"handlers": ["file_test"]
+			"handlers": ["file_test", "stdout"]
 		},
 		"test_blob_runner": {
 			"level": "DEBUG",

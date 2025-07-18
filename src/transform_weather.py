@@ -6,7 +6,6 @@ from datetime import datetime
 
 
 logger = logging.getLogger("transform_weather")
-setup_logger()
 
 
 def get_filename_xcom(ti) -> str:
@@ -49,22 +48,26 @@ def process_hourly(data: pd.DataFrame) -> pd.DataFrame:
     data.index.name = ""
 
     # Append measurement unit to index values
-    time_unit = f"time({data.at['time', 'hourly_units']})"
-    temp_unit = f"temperature({data.at['temperature_2m', 'hourly_units']})"
-    data.rename(index={"time": time_unit, "temperature_2m": temp_unit}, inplace=True)
+    dtype_map = {}
+    for index in data.index:
+        index_w_unit = f"{index}({data.at[index, 'hourly_units']})"
+        data.rename(index={index: index_w_unit}, inplace=True)
+        if "time" in index.lower():
+            dtype_map[index_w_unit] = "datetime64[ns]"
+        else:
+            dtype_map[index_w_unit] = "float64"
 
     # Format and convert 'hourly' collumn strings to list, and append to new dataframe 'hourly_df'
     hourly = data["hourly"]
     hourly_df = pd.DataFrame(columns=hourly.index)
     for index in hourly.index:
         cleaned_values = [
-            val.strip()
-            for val in hourly[index].strip("[] ").replace("'", "").split(",")
+            val.strip("' ") for val in hourly[index].strip("[]").split(",")
         ]
         hourly_df[index] = cleaned_values
 
     # Perform appropriate typecasts
-    hourly_df = hourly_df.astype({time_unit: "datetime64[ns]", temp_unit: "float64"})
+    hourly_df = hourly_df.astype(dtype_map)
 
     return hourly_df
 
@@ -74,9 +77,7 @@ def process_weather_data(data: pd.DataFrame) -> pd.DataFrame:
         logger.error("Failed to process weather data: Dataframe is empty")
         raise ValueError("Dataframe 'data' is empty")
     hourly_df = process_hourly(data)
-
     data.drop(columns=["hourly_units", "hourly"], inplace=True)
-
     for column in data.columns:
         hourly_df[column] = data.iloc[0][column]
     logger.info("Weather data processed")

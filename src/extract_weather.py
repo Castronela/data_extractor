@@ -5,7 +5,6 @@ import pandas as pd
 
 # Logger Setup
 logger = logging.getLogger("extract_weather")
-setup_logger()
 
 
 def fetch_weather_data(api_url: str) -> dict:
