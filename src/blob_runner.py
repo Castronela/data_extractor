@@ -71,7 +71,10 @@ def get_files_paths_to_upload(source_path: str, only_csv=True) -> list:
 
 
 # Loop to upload each file as a blob
-def upload_files_to_container(container_client: ContainerClient, file_paths: list):
+def upload_files_to_container(
+    container_client: ContainerClient, file_paths: list
+) -> list:
+    uploaded_files = []
     for file_path in file_paths:
         try:
             logger.info("Uploading '%s' to blob container", file_path)
@@ -86,21 +89,25 @@ def upload_files_to_container(container_client: ContainerClient, file_paths: lis
             logger.exception("Failed to upload '%s': %s", file_path, e)
             raise
         else:
+            uploaded_files.append(file_name)
             logger.debug("Blob properties: %s", blob_client.get_blob_properties())
             logger.info("File uploaded to blob container")
+    return uploaded_files
 
 
-def upload_blob():
+def upload_blob(ti=None):
     setup_logger()
     logger.info("--- Blob runner started ---")
 
     auth_data = get_dotenv_auth_data()
     container_client = get_container_client(auth_data)
     file_paths = get_files_paths_to_upload("data/processed")
-    upload_files_to_container(container_client, file_paths)
+    uploaded_files = upload_files_to_container(container_client, file_paths)
+    if ti:
+        ti.xcom_push(key="uploaded_files", value=uploaded_files)
 
     logger.info("--- Blob runner ended ---")
 
 
 if __name__ == "__main__":
-    upload_blob()
+    upload_blob(None)

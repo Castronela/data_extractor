@@ -1,22 +1,11 @@
 import logging
 import pandas as pd
-from src.helper import setup_logger, save_to_csv, is_file_empty
+from src.helper import setup_logger, save_to_csv, is_file_empty, get_xcom_data
 from pathlib import Path
 from datetime import datetime
 
 
 logger = logging.getLogger("transform_weather")
-
-
-def get_filename_xcom(ti) -> str:
-    try:
-        filename = ti.xcom_pull(key="filename", task_ids="run_extract_weather")
-    except Exception as e:
-        logger.exception("Failed to retrieve file name from Xcom: %s", e)
-        raise
-    else:
-        logger.info("Retrieved filename '%s' from Xcom", filename)
-    return filename
 
 
 def get_filename_manually(
@@ -88,7 +77,11 @@ def transform_data(ti=None, execution_date: str = None) -> None:
     setup_logger()
     logger.info("--- Transforming weather data started ---")
 
-    in_filename = get_filename_xcom(ti)
+    in_filename = (
+        get_xcom_data(ti, "filename", "run_extract_weather")
+        if ti
+        else get_filename_manually()
+    )
     csv_df = get_csv_df(in_filename)
     processed_df = process_weather_data(csv_df)
     out_filename = save_to_csv(
@@ -103,18 +96,5 @@ def transform_data(ti=None, execution_date: str = None) -> None:
     return out_filename
 
 
-def transform_data_local() -> None:
-    setup_logger()
-    logger.info("--- Transforming weather data started ---")
-
-    in_filename = get_filename_manually()
-    csv_df = get_csv_df(in_filename)
-    processed_df = process_weather_data(csv_df)
-    out_filename = save_to_csv(processed_df, "weather", "data/processed", logger=logger)
-
-    logger.info("--- Transforming weather data ended ---")
-    return out_filename
-
-
 if __name__ == "__main__":
-    transform_data_local()
+    transform_data(None, None)

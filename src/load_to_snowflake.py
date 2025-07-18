@@ -1,4 +1,4 @@
-from src.helper import setup_logger
+from src.helper import setup_logger, get_xcom_data
 import logging
 from dotenv import load_dotenv, dotenv_values
 import snowflake.connector as sf
@@ -98,26 +98,32 @@ def execute_sql(sf_cursor: sf.cursor, instruction: str) -> None:
         logger.info("SQL instruction executed")
 
 
-def build_copy_sql() -> str:
+def build_copy_sql(file: str) -> str:
     return f"""
     COPY INTO weather_data
-    FROM @azure_weather_stage/weather_{datetime.today().strftime("%Y%m%d")}.csv
+    FROM @azure_weather_stage/{file}
     FILE_FORMAT = (TYPE = 'CSV' SKIP_HEADER = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')
     """
 
 
-def load_to_snowflake() -> None:
+def load_to_snowflake(ti=None) -> None:
     setup_logger()
     logger.info("--- Load to Snowflake started ---")
 
     auth_data = get_snowflake_auth_data()
+    uploaded_files = (
+        get_xcom_data(ti, "uploaded_files", "run_blob_runner")
+        if ti
+        else [f'weather_{datetime.today().strftime("%Y%m%d")}.csv']
+    )
     with get_connection(auth_data) as sf_conn:
         with get_cursor(sf_conn) as sf_cursor:
-            sql_copy = build_copy_sql()
-            execute_sql(sf_cursor, sql_copy)
+            for file in uploaded_files:
+                sql_copy = build_copy_sql(file)
+                execute_sql(sf_cursor, sql_copy)
 
     logger.info("--- Load to Snowflake ended ---")
 
 
 if __name__ == "__main__":
-    load_to_snowflake()
+    load_to_snowflake(None)

@@ -1,7 +1,6 @@
-from src.helper import setup_logger
+from src.helper import setup_logger, get_xcom_data
 from helper import check_for_raised_exception
 from src.transform_weather import (
-    get_filename_xcom,
     get_csv_df,
     process_hourly,
     process_weather_data,
@@ -16,7 +15,7 @@ test_logger = logging.getLogger(__name__)
 setup_logger(overwrite_config=True)
 
 
-class TestGetFilenameXcom:
+class TestGetXcomData:
 
     target_function = "get_filename_xcom"
 
@@ -28,7 +27,13 @@ class TestGetFilenameXcom:
         mock_ti.xcom_pull.side_effect = Exception
 
         check_for_raised_exception(
-            Exception, description, test_logger, get_filename_xcom, mock_ti
+            Exception,
+            description,
+            test_logger,
+            get_xcom_data,
+            mock_ti,
+            "key",
+            "task_id",
         )
 
 

@@ -34,7 +34,7 @@ def save_to_csv(
     save_index: bool = False,
 ) -> str:
     if execution_date:
-        date = datetime.fromisoformat(execution_date)
+        date = str(datetime.fromisoformat(execution_date)).replace(" ", "_")
     else:
         date = datetime.today().strftime("%Y%m%d")
     filename = f"{output_dir}/{file_prefix}_{date}.csv"
@@ -54,3 +54,16 @@ def is_file_empty(filename: str) -> bool:
     with open(filename, mode="r", encoding="utf-8") as file:
         content = file.read().strip()
     return not content
+
+
+def get_xcom_data(ti, key: str, task_id: str, logger=None):
+    try:
+        data = ti.xcom_pull(key=key, task_ids=task_id)
+    except Exception as e:
+        if logger:
+            logger.exception("Failed to retrieve data from Xcom: %s", e)
+        raise
+    else:
+        if logger:
+            logger.info("Retrieved data from Xcom: '%s'", data)
+    return data
