@@ -1,10 +1,6 @@
 import logging
 import pandas as pd
-
-try:
-    from .helper import setup_logger, save_to_csv, is_file_empty
-except ImportError:
-    from helper import setup_logger, save_to_csv, is_file_empty
+from src.helper import setup_logger, save_to_csv, is_file_empty
 from pathlib import Path
 from datetime import datetime
 

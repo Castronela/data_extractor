@@ -1,7 +1,4 @@
-try:
-    from helper import setup_logger, save_to_csv
-except ImportError:
-    from .helper import setup_logger, save_to_csv
+from src.helper import setup_logger, save_to_csv
 import requests
 import logging
 import pandas as pd

@@ -1,7 +1,4 @@
-try:
-    from helper import setup_logger
-except ImportError:
-    from .helper import setup_logger
+from src.helper import setup_logger
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from dotenv import load_dotenv, dotenv_values
 import logging

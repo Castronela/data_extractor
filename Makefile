@@ -21,10 +21,10 @@ install:
 		fi
 
 run:
-	@python src/extract_weather.py \
-		&& python src/transform_weather.py \
-		&& python src/blob_runner.py \
-		&& python src/load_to_snowflake.py
+	@python -m src.extract_weather \
+		&& python -m src.transform_weather \
+		&& python -m src.blob_runner \
+		&& python -m src.load_to_snowflake
 
 test:
 	@python -m pytest --rootdir=tests tests/*.py
