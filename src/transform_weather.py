@@ -84,32 +84,37 @@ def process_weather_data(data: pd.DataFrame) -> pd.DataFrame:
     return hourly_df
 
 
-def transform_data(ti) -> None:
+def transform_data(ti=None, execution_date: str = None) -> None:
     setup_logger()
     logger.info("--- Transforming weather data started ---")
 
     in_filename = get_filename_xcom(ti)
     csv_df = get_csv_df(in_filename)
     processed_df = process_weather_data(csv_df)
-    out_filename = save_to_csv(processed_df, "weather", "data/processed", logger)
+    out_filename = save_to_csv(
+        processed_df,
+        "weather",
+        "data/processed",
+        execution_date=execution_date,
+        logger=logger,
+    )
 
     logger.info("--- Transforming weather data ended ---")
     return out_filename
 
 
-def transform_data_local(ti=None) -> None:
+def transform_data_local() -> None:
     setup_logger()
     logger.info("--- Transforming weather data started ---")
 
-    _ = ti
     in_filename = get_filename_manually()
     csv_df = get_csv_df(in_filename)
     processed_df = process_weather_data(csv_df)
-    out_filename = save_to_csv(processed_df, "weather", "data/processed", logger)
+    out_filename = save_to_csv(processed_df, "weather", "data/processed", logger=logger)
 
     logger.info("--- Transforming weather data ended ---")
     return out_filename
 
 
 if __name__ == "__main__":
-    transform_data_local(None)
+    transform_data_local()

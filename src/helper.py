@@ -29,11 +29,15 @@ def save_to_csv(
     df: pd.DataFrame,
     file_prefix: str,
     output_dir: str,
+    execution_date=None,
     logger: Logger | None = None,
     save_index: bool = False,
 ) -> str:
-    today_str = datetime.today().strftime("%Y%m%d")
-    filename = f"{output_dir}/{file_prefix}_{today_str}.csv"
+    if execution_date:
+        date = datetime.fromisoformat(execution_date)
+    else:
+        date = datetime.today().strftime("%Y%m%d")
+    filename = f"{output_dir}/{file_prefix}_{date}.csv"
     try:
         df.to_csv(filename, index=save_index)
     except Exception:
