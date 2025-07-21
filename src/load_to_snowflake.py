@@ -91,12 +91,14 @@ def execute_sql(sf_cursor: sf.cursor, instruction: str) -> None:
         if not instruction:
             raise ValueError("SQL instruction is empty")
         sf_cursor.execute(instruction)
-        logger.debug("SQL instruction: %s", instruction)
+
+        result = sf_cursor.fetchall()
     except Exception as e:
         logger.exception("Failed to execute SQL instruction: %s", e)
         raise
     else:
         logger.info("SQL instruction executed")
+    return result
 
 
 def build_copy_sql(file: str) -> str:
@@ -105,6 +107,21 @@ def build_copy_sql(file: str) -> str:
     FROM @azure_weather_stage/{file}
     FILE_FORMAT = (TYPE = 'CSV' SKIP_HEADER = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')
     """
+
+
+def check_stage_file_rows(sf_cursor: sf.cursor, file: str) -> int:
+    sql_row_count = f"""
+    SELECT count(*)
+    FROM @azure_weather_stage/{file}
+    """
+    result = execute_sql(sf_cursor, sql_row_count)
+    return result[0][0]
+
+
+def check_table_rows(sf_cursor: sf.cursor) -> int:
+    sql_row_count = "SELECT count(*) FROM weather_data"
+    result = execute_sql(sf_cursor, sql_row_count)
+    return result[0][0]
 
 
 def load_to_snowflake_logic(uploaded_files: list[str] = None) -> None:
@@ -117,8 +134,15 @@ def load_to_snowflake_logic(uploaded_files: list[str] = None) -> None:
     with get_connection(auth_data) as sf_conn:
         with get_cursor(sf_conn) as sf_cursor:
             for file in uploaded_files:
+                logger.debug(
+                    "Rows to be uploaded: %s", check_stage_file_rows(sf_cursor, file)
+                )
                 sql_copy = build_copy_sql(file)
                 execute_sql(sf_cursor, sql_copy)
+                logger.debug(
+                    "'weather data' total rows after upload: %s",
+                    check_table_rows(sf_cursor),
+                )
 
     logger.info("--- Load to Snowflake ended ---")
 
