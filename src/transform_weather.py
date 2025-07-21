@@ -1,8 +1,10 @@
 import logging
 import pandas as pd
-from src.helper import setup_logger, save_to_csv, is_file_empty, get_xcom_data
+from src.helper import setup_logger, save_to_csv, is_file_empty
 from pathlib import Path
 from datetime import datetime
+from airflow.decorators import task
+from airflow.operators.python import get_current_context
 
 
 logger = logging.getLogger("transform_weather")
@@ -73,22 +75,23 @@ def process_weather_data(data: pd.DataFrame) -> pd.DataFrame:
     return hourly_df
 
 
-def transform_data(ti=None, execution_date: str = None) -> None:
+def transform_data_logic(in_filename: str = None) -> None:
     setup_logger()
     logger.info("--- Transforming weather data started ---")
 
-    in_filename = (
-        get_xcom_data(ti, "filename", "run_extract_weather")
-        if ti
-        else get_filename_manually()
-    )
+    if in_filename is None:
+        in_filename = get_filename_manually()
     csv_df = get_csv_df(in_filename)
     processed_df = process_weather_data(csv_df)
+    try:
+        save_date = get_current_context()["logical_date"]
+    except RuntimeError:
+        save_date = None
     out_filename = save_to_csv(
         processed_df,
         "weather",
         "data/processed",
-        execution_date=execution_date,
+        execution_date=save_date,
         logger=logger,
     )
 
@@ -96,5 +99,10 @@ def transform_data(ti=None, execution_date: str = None) -> None:
     return out_filename
 
 
+@task
+def transform_data(in_filename: str = None) -> None:
+    return transform_data_logic(in_filename)
+
+
 if __name__ == "__main__":
-    transform_data(None, None)
+    transform_data_logic(None)

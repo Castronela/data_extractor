@@ -1,8 +1,9 @@
-from src.helper import setup_logger, get_xcom_data
+from src.helper import setup_logger
 import logging
 from dotenv import load_dotenv, dotenv_values
 import snowflake.connector as sf
 from pathlib import Path
+from airflow.decorators import task
 from datetime import datetime
 
 logger = logging.getLogger("load_to_snowflake")
@@ -106,16 +107,13 @@ def build_copy_sql(file: str) -> str:
     """
 
 
-def load_to_snowflake(ti=None) -> None:
+def load_to_snowflake_logic(uploaded_files: list[str] = None) -> None:
     setup_logger()
     logger.info("--- Load to Snowflake started ---")
 
     auth_data = get_snowflake_auth_data()
-    uploaded_files = (
-        get_xcom_data(ti, "uploaded_files", "run_blob_runner")
-        if ti
-        else [f'weather_{datetime.today().strftime("%Y%m%d")}.csv']
-    )
+    if uploaded_files is None:
+        uploaded_files = [f'weather_{datetime.today().strftime("%Y%m%d")}.csv']
     with get_connection(auth_data) as sf_conn:
         with get_cursor(sf_conn) as sf_cursor:
             for file in uploaded_files:
@@ -125,5 +123,10 @@ def load_to_snowflake(ti=None) -> None:
     logger.info("--- Load to Snowflake ended ---")
 
 
+@task
+def load_to_snowflake(uploaded_files: list[str] = None) -> None:
+    return load_to_snowflake_logic(uploaded_files)
+
+
 if __name__ == "__main__":
-    load_to_snowflake(None)
+    load_to_snowflake_logic(None)

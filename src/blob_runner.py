@@ -4,6 +4,7 @@ from dotenv import load_dotenv, dotenv_values
 import logging
 import azure
 from pathlib import Path
+from airflow.decorators import task
 
 logger = logging.getLogger("blob_runner")
 
@@ -95,7 +96,7 @@ def upload_files_to_container(
     return uploaded_files
 
 
-def upload_blob(ti=None):
+def upload_blob_logic():
     setup_logger()
     logger.info("--- Blob runner started ---")
 
@@ -103,11 +104,14 @@ def upload_blob(ti=None):
     container_client = get_container_client(auth_data)
     file_paths = get_files_paths_to_upload("data/processed")
     uploaded_files = upload_files_to_container(container_client, file_paths)
-    if ti:
-        ti.xcom_push(key="uploaded_files", value=uploaded_files)
-
     logger.info("--- Blob runner ended ---")
+    return uploaded_files
+
+
+@task
+def upload_blob():
+    return upload_blob_logic()
 
 
 if __name__ == "__main__":
-    upload_blob(None)
+    upload_blob_logic()

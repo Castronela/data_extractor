@@ -3,7 +3,7 @@ import logging
 from src.helper import setup_logger
 
 logger = logging.getLogger("conftest")
-setup_logger(overwrite_config=True)
+setup_logger()
 
 
 @pytest.fixture(scope="session", autouse=True)

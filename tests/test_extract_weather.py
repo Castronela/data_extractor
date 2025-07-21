@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 
 # Logger Setup
 t_logger = logging.getLogger(__name__)
-setup_logger(overwrite_config=True)
+setup_logger()
 
 # Sample fake API JSON response
 fake_api_response = {

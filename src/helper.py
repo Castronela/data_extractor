@@ -7,9 +7,7 @@ from datetime import datetime
 import pandas as pd
 
 
-def setup_logger(overwrite_config: bool = False):
-    if not overwrite_config and logging.getLogger().handlers:
-        return
+def setup_logger():
     config_path = "config/logging.json"
     try:
         if not Path(config_path).exists():
@@ -29,12 +27,12 @@ def save_to_csv(
     df: pd.DataFrame,
     file_prefix: str,
     output_dir: str,
-    execution_date=None,
+    execution_date: datetime = None,
     logger: Logger | None = None,
     save_index: bool = False,
 ) -> str:
-    if execution_date:
-        date = str(datetime.fromisoformat(execution_date)).replace(" ", "_")
+    if execution_date is not None:
+        date = execution_date.strftime("%Y%m%d")
     else:
         date = datetime.today().strftime("%Y%m%d")
     filename = f"{output_dir}/{file_prefix}_{date}.csv"
@@ -54,16 +52,3 @@ def is_file_empty(filename: str) -> bool:
     with open(filename, mode="r", encoding="utf-8") as file:
         content = file.read().strip()
     return not content
-
-
-def get_xcom_data(ti, key: str, task_id: str, logger=None):
-    try:
-        data = ti.xcom_pull(key=key, task_ids=task_id)
-    except Exception as e:
-        if logger:
-            logger.exception("Failed to retrieve data from Xcom: %s", e)
-        raise
-    else:
-        if logger:
-            logger.info("Retrieved data from Xcom: '%s'", data)
-    return data

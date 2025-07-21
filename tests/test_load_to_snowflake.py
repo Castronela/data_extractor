@@ -14,7 +14,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 test_logger = logging.getLogger(__name__)
-setup_logger(overwrite_config=True)
+setup_logger()
 
 
 class TestGetSnowflakeAuthData:

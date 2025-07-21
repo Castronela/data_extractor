@@ -1,4 +1,4 @@
-from src.helper import setup_logger, get_xcom_data
+from src.helper import setup_logger
 from helper import check_for_raised_exception
 from src.transform_weather import (
     get_csv_df,
@@ -8,33 +8,10 @@ from src.transform_weather import (
 import logging
 import pandas as pd
 import pandas.api.types as ptypes
-from unittest.mock import Mock
 
 test_logger = logging.getLogger(__name__)
 
-setup_logger(overwrite_config=True)
-
-
-class TestGetXcomData:
-
-    target_function = "get_filename_xcom"
-
-    def test_task_instance_exception(self):
-        description = f"{self.target_function:<30}: Test for handling ti exception"
-
-        mock_ti = Mock()
-        mock_ti.return_value = "filename"
-        mock_ti.xcom_pull.side_effect = Exception
-
-        check_for_raised_exception(
-            Exception,
-            description,
-            test_logger,
-            get_xcom_data,
-            mock_ti,
-            "key",
-            "task_id",
-        )
+setup_logger()
 
 
 class TestGetCsvDf:
