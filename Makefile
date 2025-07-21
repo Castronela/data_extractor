@@ -15,10 +15,13 @@ all: install format lint test
 
 install:
 	@pip install -U pip \
-		&& pip install -r requirements.txt \
-		&& if [ ! -s .env ]; then \
-			echo "$$DOTENV"  > .env; \
-		fi
+		&& pip install -r requirements.txt
+	@if [ ! -s .env ]; then \
+		echo "$$DOTENV"  > .env; \
+	fi
+	@if [ ! -s ./docker/.env ]; then \
+		echo -e "AIRFLOW_UID=$$(id -u)\nAIRFLOW_WEBHOOK_TOKEN="  > ./docker/.env; \
+	fi
 
 run:
 	@python -m src.extract_weather \
@@ -37,7 +40,6 @@ lint:
 
 docker-up:
 	@cd docker \
-		&& echo -n "AIRFLOW_UID=$$(id -u)" > .env \
 		&& docker compose up -d --build
 
 docker-down:

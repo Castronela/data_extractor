@@ -4,12 +4,14 @@ from src.extract_weather import extract_data
 from src.transform_weather import transform_data
 from src.blob_runner import upload_blob
 from src.load_to_snowflake import load_to_snowflake
+from src.alerts import slack_failure_alert
 from datetime import datetime, timedelta
 
 default_args = {
     "depends_on_past": False,
     "retries": 0,
     "retry_delay": timedelta(minutes=5),
+    "on_failure_callback": slack_failure_alert,
 }
 
 with DAG(

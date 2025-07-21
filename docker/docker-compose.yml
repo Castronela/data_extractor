@@ -10,3 +10,4 @@ services:
       - ../.env:/opt/airflow/.env
     environment:
       - AIRFLOW_UID=${AIRFLOW_UID}
+      - AIRFLOW_CONN_SLACK_CONNECTION={"conn_type":"slackwebhook","host":"https://hooks.slack.com/services/","password":"${AIRFLOW_WEBHOOK_TOKEN}"}
