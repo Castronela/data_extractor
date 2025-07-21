@@ -87,6 +87,16 @@ Then visit the Airflow UI at http://localhost:8080
 (Default username: `admin`, password: `admin`)  
 Your DAG will be visible under `weather_dag`.
 
+#### 6.1 (Optional) Slack Alerts
+
+The Airflow DAG is configured to send **failure alerts to Slack** using the `on_failure_callback` hook.
+
+To enable Slack notifications:
+1. Create a Slack **Incoming Webhook** and copy the URL.
+2. Add the webhook URL as an environment variable in your `docker/.env` file:
+   ```env
+   AIRFLOW_WEBHOOK_TOKEN=T12345/B12345/abc123xyz
+
 
 ### 7. (Optional) Run tests (local dev)
 ```bash
