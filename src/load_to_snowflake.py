@@ -124,32 +124,32 @@ def check_table_rows(sf_cursor: sf.cursor) -> int:
     return result[0][0]
 
 
-def load_to_snowflake_logic(uploaded_files: list[str] = None) -> None:
+def load_to_snowflake_logic(uploaded_file: str = None) -> None:
     setup_logger()
     logger.info("--- Load to Snowflake started ---")
 
     auth_data = get_snowflake_auth_data()
-    if uploaded_files is None:
-        uploaded_files = [f'weather_{datetime.today().strftime("%Y%m%d")}.csv']
+    if uploaded_file is None:
+        uploaded_file = f'weather_{datetime.today().strftime("%Y%m%d")}.csv'
     with get_connection(auth_data) as sf_conn:
         with get_cursor(sf_conn) as sf_cursor:
-            for file in uploaded_files:
-                logger.debug(
-                    "Rows to be uploaded: %s", check_stage_file_rows(sf_cursor, file)
-                )
-                sql_copy = build_copy_sql(file)
-                execute_sql(sf_cursor, sql_copy)
-                logger.debug(
-                    "'weather data' total rows after upload: %s",
-                    check_table_rows(sf_cursor),
-                )
+            logger.debug(
+                "Rows to be uploaded: %s",
+                check_stage_file_rows(sf_cursor, uploaded_file),
+            )
+            sql_copy = build_copy_sql(uploaded_file)
+            execute_sql(sf_cursor, sql_copy)
+            logger.debug(
+                "'weather data' total rows after upload: %s",
+                check_table_rows(sf_cursor),
+            )
 
     logger.info("--- Load to Snowflake ended ---")
 
 
 @task
-def load_to_snowflake(uploaded_files: list[str] = None) -> None:
-    return load_to_snowflake_logic(uploaded_files)
+def load_to_snowflake(uploaded_file: str = None) -> None:
+    return load_to_snowflake_logic(uploaded_file)
 
 
 if __name__ == "__main__":

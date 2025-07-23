@@ -1,8 +1,7 @@
 from src.blob_runner import (
     get_dotenv_auth_data,
     get_container_client,
-    get_files_paths_to_upload,
-    upload_files_to_container,
+    upload_file_to_container,
 )
 from src.helper import setup_logger
 from helper import check_for_raised_exception
@@ -169,66 +168,9 @@ class TestGetContainerClient:
         )
 
 
-class TestGetFilesPathsToUpload:
-
-    target_function = "get_files_paths_to_upload"
-
-    # Test if function returns only .csv files when option only_csv is True
-    def test_only_csv(self, tmp_path):
-        description = f"{self.target_function:<30}: Test for returning only .csv files when option only_csv is True"
-
-        files = ("good.csv", "bad.txt", "bad.csvv")
-        file_paths = [str(tmp_path / f) for f in files]
-        for fp in file_paths:
-            open(fp, "a", encoding="utf-8").close()
-
-        only_csv = True
-        result = get_files_paths_to_upload(source_path=tmp_path, only_csv=only_csv)
-        try:
-            assert len(result) == 1
-            assert result[0] == str(tmp_path / "good.csv")
-        except AssertionError:
-            test_logger.exception("FAILED: %s", description)
-            raise
-        else:
-            test_logger.info("PASSED: %s", description)
-
-    # Test if function returns all files when option only_csv is False
-    def test_all_files(self, tmp_path):
-        description = f"{self.target_function:<30}: Test for returning all files when option only_csv is False"
-
-        files = ("good.csv", "good.txt", "good.csvv")
-        file_paths = [str(tmp_path / f) for f in files]
-        for fp in file_paths:
-            open(fp, "a", encoding="utf-8").close()
-
-        only_csv = False
-        result = get_files_paths_to_upload(source_path=tmp_path, only_csv=only_csv)
-        try:
-            assert len(result) == 3, f"Expected 3 files, got {len(result)}"
-            for item in result:
-                assert item in file_paths
-        except AssertionError:
-            test_logger.exception("FAILED: %s", description)
-            raise
-        else:
-            test_logger.info("PASSED: %s", description)
-
-    # Test if function handles invalid source path
-    def test_invalid_source_path(self):
-        description = (
-            f"{self.target_function:<30}: Test for handling invalid source path"
-        )
-
-        bad_path = "/dev/null/subdir"
-        check_for_raised_exception(
-            Exception, description, test_logger, get_files_paths_to_upload, bad_path
-        )
-
-
 class TestUploadFilesToContainer:
 
-    target_function = "upload_files_to_container"
+    target_function = "upload_file_to_container"
 
     # Test if function handles invalid file path
     def test_invalid_file_path(self):
@@ -245,7 +187,7 @@ class TestUploadFilesToContainer:
             Exception,
             description,
             test_logger,
-            upload_files_to_container,
+            upload_file_to_container,
             mock_container_client,
             bad_file_path,
         )
@@ -265,7 +207,7 @@ class TestUploadFilesToContainer:
             Exception,
             description,
             test_logger,
-            upload_files_to_container,
+            upload_file_to_container,
             mock_container_client,
             test_file_path,
         )

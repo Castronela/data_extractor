@@ -52,6 +52,10 @@
             "level": "DEBUG",
             "handlers": ["stdout", "file_log", "json_log"]
         },
+        "validate": {
+            "level": "DEBUG",
+            "handlers": ["stdout", "file_log", "json_log"]
+        },
         "blob_runner": {
             "level": "DEBUG",
             "handlers": ["stdout", "file_log", "json_log"]

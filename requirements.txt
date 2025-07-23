@@ -6,9 +6,9 @@ requests
 numpy
 pandas
 python-json-logger
-apache-airflow
+apache-airflow<=2.7.3
 python-dotenv
 azure-storage-blob 
 snowflake-connector-python
-pyarrow<19.0.0
+pyarrow<10.1.0,>=10.0.1
 apache-airflow-providers-slack

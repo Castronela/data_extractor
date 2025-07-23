@@ -55,63 +55,46 @@ def get_container_client(auth_data: dict) -> ContainerClient:
     return container_client
 
 
-# Extract all files from path
-def get_files_paths_to_upload(source_path: str, only_csv=True) -> list:
+# Loop to upload each file as a blob
+def upload_file_to_container(container_client: ContainerClient, file_path: str) -> str:
     try:
-        # Create list comprehension of all files within source_dir
-        file_paths = [str(f) for f in Path(source_path).iterdir() if f.is_file()]
-        # if only_csv is True, filter in only .csv files
-        if only_csv:
-            file_paths = [f for f in file_paths if f.endswith(".csv")]
+        logger.info("Uploading '%s' to blob container", file_path)
+        file_name = Path(file_path).name
+        with open(file_path, "rb") as data:
+            blob_client = container_client.upload_blob(
+                name=file_name, data=data, overwrite=False
+            )
+    except azure.core.exceptions.ResourceExistsError:
+        logger.info("Blob already exists: %s", file_name)
     except Exception as e:
-        logger.exception("Failed to retrieve files from dir '%s': %s", source_path, e)
+        logger.exception("Failed to upload '%s': %s", file_path, e)
         raise
     else:
-        logger.debug("Files to upload: %s", file_paths)
-    return file_paths
+        logger.debug("Blob properties: %s", blob_client.get_blob_properties())
+        logger.info("File uploaded to blob container")
+    return file_path
 
 
-# Loop to upload each file as a blob
-def upload_files_to_container(
-    container_client: ContainerClient, file_paths: list
-) -> list:
-    uploaded_files = []
-    for file_path in file_paths:
-        try:
-            logger.info("Uploading '%s' to blob container", file_path)
-            file_name = Path(file_path).name
-            with open(file_path, "rb") as data:
-                blob_client = container_client.upload_blob(
-                    name=file_name, data=data, overwrite=False
-                )
-        except azure.core.exceptions.ResourceExistsError:
-            logger.info("Blob already exists: %s", file_name)
-        except Exception as e:
-            logger.exception("Failed to upload '%s': %s", file_path, e)
-            raise
-        else:
-            uploaded_files.append(file_name)
-            logger.debug("Blob properties: %s", blob_client.get_blob_properties())
-            logger.info("File uploaded to blob container")
-    return uploaded_files
+from datetime import datetime
 
 
-def upload_blob_logic():
+def upload_blob_logic(file_path: str = None):
     setup_logger()
     logger.info("--- Blob runner started ---")
 
     auth_data = get_dotenv_auth_data()
     container_client = get_container_client(auth_data)
-    file_paths = get_files_paths_to_upload("data/processed")
-    uploaded_files = upload_files_to_container(container_client, file_paths)
+    if file_path is None:
+        file_path = f'data/processed/weather_{datetime.today().strftime("%Y%m%d")}.csv'
+    uploaded_file = upload_file_to_container(container_client, file_path)
     logger.info("--- Blob runner ended ---")
-    return uploaded_files
+    return uploaded_file
 
 
 @task
-def upload_blob():
-    return upload_blob_logic()
+def upload_blob(file_path: str = None):
+    return upload_blob_logic(file_path)
 
 
 if __name__ == "__main__":
-    upload_blob_logic()
+    upload_blob_logic(None)

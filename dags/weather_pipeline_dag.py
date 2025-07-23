@@ -4,6 +4,7 @@ from src.transform_weather import transform_data
 from src.blob_runner import upload_blob
 from src.load_to_snowflake import load_to_snowflake
 from src.alerts import slack_failure_alert
+from src.validate import validate_transform_data
 from datetime import datetime, timedelta
 
 default_args = {
@@ -26,8 +27,9 @@ default_args = {
 )
 def data_extractor():
     filename = extract_data()
-    transform_data(filename)
-    uploaded_files = upload_blob()
+    processed_file = transform_data(filename)
+    validate_transform_data(processed_file)
+    uploaded_files = upload_blob(processed_file)
     load_to_snowflake(uploaded_files)
 
 

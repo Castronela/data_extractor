@@ -26,6 +26,7 @@ install:
 run:
 	@python -m src.extract_weather \
 		&& python -m src.transform_weather \
+		&& python -m src.validate \
 		&& python -m src.blob_runner \
 		&& python -m src.load_to_snowflake
 
