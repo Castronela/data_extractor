@@ -55,7 +55,6 @@ def get_container_client(auth_data: dict) -> ContainerClient:
     return container_client
 
 
-# Loop to upload each file as a blob
 def upload_file_to_container(container_client: ContainerClient, file_path: str) -> str:
     try:
         logger.info("Uploading '%s' to blob container", file_path)
